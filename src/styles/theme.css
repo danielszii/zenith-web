@@ -5,6 +5,15 @@
   --font-weight-medium: 500;
   --font-weight-normal: 400;
   --radius: 0.75rem;
+  
+  /* Garante que o --spacing exista no escopo raiz */
+  --spacing: 0.25rem; 
+
+  /* Definições de tamanho de fonte para evitar erros no h1-h4 */
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
 }
 
 :root {
@@ -149,6 +158,9 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  
+  /* Vincula a variável de espaçamento ao tema do Tailwind v4 */
+  --spacing: var(--spacing);
 }
 
 @layer base {
@@ -168,11 +180,6 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
-
-  /**
-  * Default typography styles for HTML elements (h1-h4, p, label, button, input).
-  * These are in @layer base, so Tailwind utility classes (like text-sm, text-lg) automatically override them.
-  */
 
   html {
     font-size: var(--font-size);

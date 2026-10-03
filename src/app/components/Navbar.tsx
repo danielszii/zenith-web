@@ -10,10 +10,7 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
     { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
     { id: 'championships', label: 'Campeonatos', icon: Trophy },
     { id: 'matches', label: 'Partidas', icon: Calendar },
-    { id: 'players', label: 'Atletas', icon: User },
     { id: 'gallery', label: 'Galeria', icon: Image },
-    { id: 'sumula', label: 'Súmula', icon: ClipboardList },
-    { id: 'reports', label: 'Relatórios', icon: FileText },
   ];
 
   return (
