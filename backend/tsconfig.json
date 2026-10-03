@@ -2,12 +2,13 @@
   // Visit https://aka.ms/tsconfig to read more about this file
   "compilerOptions": {
     // File Layout
-    // "rootDir": "./src",
-    // "outDir": "./dist",
+    "rootDir": "./src",
+    "outDir": "./dist",
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
     "target": "es2020",
-    "module": "commonjs",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     //"types": [],
     // For nodejs:
     // "lib": ["esnext"],
@@ -39,6 +40,8 @@
     "forceConsistentCasingInFileNames": true,
     "strictPropertyInitialization": false, /* Check for class properties that are declared but not set in the constructor. */
     "experimentalDecorators": true, /* Enable experimental support for legacy experimental decorators. */
-    "emitDecoratorMetadata": true, /* Emit design-type metadata for decorated declarations in source files. */
-  }
+    "emitDecoratorMetadata": true /* Emit design-type metadata for decorated declarations in source files. */
+  },
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules", "dist"]
 }

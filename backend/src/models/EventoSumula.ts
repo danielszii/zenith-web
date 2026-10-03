@@ -36,7 +36,7 @@ export class EventoSumula {
       id_atleta,
       id_clube,
       tipo_evento,
-      id_atleta_assistencia: null,
+      id_atleta_assistencia,
       minuto_evento,
       timestamp_offline,
     };

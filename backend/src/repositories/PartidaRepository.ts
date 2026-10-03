@@ -22,7 +22,18 @@ export class PartidaRepository {
   }
 
   async findAll(): Promise<Partida[]> {
-    const query = "SELECT * FROM partidas ORDER BY data DESC, hora DESC;";
+    const query = `
+      SELECT
+        p.*,
+        json_build_object('nome', mandante.nome) AS mandante,
+        json_build_object('nome', visitante.nome) AS visitante,
+        json_build_object('nome', campeonato.nome, 'categoria', campeonato.categoria) AS campeonato
+      FROM partidas p
+      JOIN clubes mandante ON mandante.id_clube = p.id_mandante
+      JOIN clubes visitante ON visitante.id_clube = p.id_visitante
+      JOIN campeonatos campeonato ON campeonato.id_campeonato = p.id_campeonato
+      ORDER BY p.data DESC, p.hora DESC;
+    `;
     const { rows } = await pool.query(query);
     return rows;
   }
