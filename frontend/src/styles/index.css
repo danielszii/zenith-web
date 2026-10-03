@@ -1,0 +1,26 @@
+@import './fonts.css';
+@import './tailwind.css';
+@import './theme.css';
+
+/* src/index.css */
+
+/* Garante que a raiz do HTML e o BODY permitem que o conteúdo saia para fora da tela física 
+   sem criar uma barra de rolagem global na parte inferior do site */
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  /* IMPORTANTE: Remova overflow-hidden daqui se existir! */
+  width: 100%;
+}
+
+/* Criamos uma classe global para esconder a barra de rolagem horizontal nativa */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
