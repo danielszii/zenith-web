@@ -1,12 +1,4 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsIn,
-  IsOptional,
-  Min,
-  Max,
-  IsString,
-} from "class-validator";
+import {IsInt, IsNotEmpty, IsIn, IsOptional, Min, Max, IsString } from "class-validator";
 
 export class CreateEventoSumulaDTO {
   @IsString({ message: "O id do atleta deve ser uma string." })

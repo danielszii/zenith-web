@@ -2,7 +2,6 @@ import { randomUUID } from "crypto";
 import { BadRequestError } from "../errors/BadRequestError.js";
 import { ValidarCPF } from "../util/validarCPF.js";
 
-// O modelo Atleta representa um atleta com seus atributos e validações
 export type propsAtleta = {
   id_atleta: string;
   nome: string;
@@ -56,7 +55,6 @@ export class Atleta {
     return new Atleta(props);
   }
 
-  // Os getters permitem acessar os atributos do atleta de forma controlada, mantendo a imutabilidade dos dados
   public get id_atleta() {
     return this.props.id_atleta;
   }

@@ -1,10 +1,4 @@
-import {
-  IsDateString,
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsIn,
-} from "class-validator";
+import {IsDateString, IsString, IsNotEmpty, IsOptional, IsIn} from "class-validator";
 
 export class CreateCampeonatoDTO {
   @IsString()

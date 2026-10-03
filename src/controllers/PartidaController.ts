@@ -23,6 +23,15 @@ export class PartidaController {
       next(error);
     }
   }
+    async delete(req: Request, res: Response, next: NextFunction) {
+    try {
+      const { id } = req.params;
+      await this.PartidaService.deletarPartida(String(id));
+      return res.status(204).send();
+    } catch (error) {
+      next(error);
+    }
+  }
 
   async updateStatus(req: Request, res: Response, next: NextFunction) {
     try {

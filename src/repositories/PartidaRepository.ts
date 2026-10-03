@@ -39,6 +39,13 @@ export class PartidaRepository {
     return rows[0];
   }
 
+  async delete(id: string): Promise<boolean> {
+    const query = "DELETE FROM partidas WHERE id_partida = $1;";
+    await pool.query(query, [id]);
+    return true;
+  }
+
+
   async findSumulaDados(id_partida: string) {
     const query = `SELECT p.*,
         c.nome as nome_campeonato,

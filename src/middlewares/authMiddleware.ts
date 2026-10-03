@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
+import { BusinessRuleError } from "../errors/BusinessRuleError.js";
 
 const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key_local";
 
@@ -8,7 +9,6 @@ interface TokenPayload {
   role: "admin" | "mesario" | "gestor";
 }
 
-// Estende a tipagem do Express para aceitar o usuário logado na requisição
 declare global {
   namespace Express {
     interface Request {
@@ -24,30 +24,19 @@ export const authMiddleware = (
 ) => {
   const authHeader = req.headers.authorization;
 
-  if (!authHeader) {
-    return res
-      .status(401)
-      .json({
-        status: "error",
-        message: "Token de autenticação não fornecido.",
-      });
+  // 2. Extrai o token de forma direta dividindo a string pelo espaço
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new BusinessRuleError("Token de autenticação não fornecido ou malformado.");
   }
 
   const [, token] = authHeader.split(" ");
 
   try {
     const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
-
-    // Injeta o ID e a Role do usuário dentro do 'req' para o próximo middleware usar
     req.usuarioLogado = { id: decoded.id, role: decoded.role };
-
+    
     return next();
-  } catch (error) {
-    return res
-      .status(401)
-      .json({
-        status: "error",
-        message: "Token de autenticação inválido ou expirado.",
-      });
+  } catch {
+    throw new BusinessRuleError("Token de autenticação inválido ou expirado.");
   }
 };

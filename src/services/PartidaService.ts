@@ -34,6 +34,10 @@ export class PartidaService {
     return await this.PartidaRepository.findAll();
   }
 
+  async deletarPartida(id: string) {
+    return await this.PartidaRepository.delete(id);
+  }
+
   async buscarPorId(id: string) {
     const partida = await this.PartidaRepository.findById(id);
     if (!partida) {

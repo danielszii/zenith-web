@@ -5,10 +5,8 @@ export class AtletaController {
   public constructor(private readonly AtletaService: AtletaService) {}
   async store(req: Request, res: Response, next: NextFunction) {
     try {
-      // 2. Chama o repositório para executar o SQL
       const novoAtleta = await this.AtletaService.registrarAtleta(req.body);
 
-      // 3. Retorna o status 201 (Created) e o objeto criado
       return res.status(201).json(novoAtleta);
     } catch (error) {
       next(error);

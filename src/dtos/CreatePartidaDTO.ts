@@ -1,11 +1,4 @@
-import {
-  IsInt,
-  IsNotEmpty,
-  IsDateString,
-  IsString,
-  Matches,
-  IsOptional,
-} from "class-validator";
+import {IsInt, IsNotEmpty, IsDateString, IsString, Matches, IsOptional} from "class-validator";
 
 export class CreatePartidaDTO {
   @IsString({ message: "O id do campeonato deve ser uma string." })

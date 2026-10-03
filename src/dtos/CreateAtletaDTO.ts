@@ -1,12 +1,4 @@
-import {
-  IsString,
-  IsNotEmpty,
-  IsInt,
-  IsOptional,
-  IsDateString,
-  IsNumber,
-  Min,
-} from "class-validator";
+import {IsString, IsNotEmpty, IsInt, IsOptional, IsDateString, IsNumber, Min,} from "class-validator";
 
 export class CreateAtletaDTO {
   @IsString()

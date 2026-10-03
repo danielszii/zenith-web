@@ -18,7 +18,7 @@ export class Usuario {
     senha: string,
     role: "admin" | "mesario" | "gestor",
   ) {
-    // Validação de Domínio Básica (Princípio Fail-Fast)
+    // Validação do Dominio email
     if (!nome || nome.trim() === "") {
       throw new BadRequestError("O nome do usuário é obrigatório.");
     }
