@@ -5,8 +5,9 @@ import { BusinessRuleError } from "../errors/BusinessRuleError.js";
 import { NotFoundError } from "../errors/NotFoundError.js";
 import { CreateUsuarioDTO } from "../dtos/CreateUsuarioDTO.js";
 import { Usuario } from "../models/Usuario.js";
+import { env } from "../config/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key_local";
+const JWT_SECRET = env.jwtSecret;
 
 export class AuthService {
   public constructor(private readonly usuarioRepository: UsuarioRepository) {}

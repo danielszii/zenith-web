@@ -1,4 +1,4 @@
-import { Trophy, User, Calendar, BarChart3, FileText, Image, ClipboardList } from 'lucide-react';
+import { Trophy, Calendar, BarChart3, Image, Settings } from 'lucide-react';
 
 interface NavbarProps {
   activePage: string;
@@ -11,6 +11,7 @@ export function Navbar({ activePage, onNavigate }: NavbarProps) {
     { id: 'championships', label: 'Campeonatos', icon: Trophy },
     { id: 'matches', label: 'Partidas', icon: Calendar },
     { id: 'gallery', label: 'Galeria', icon: Image },
+    { id: 'management', label: 'Gestão', icon: Settings },
   ];
 
   return (

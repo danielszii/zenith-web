@@ -1,10 +1,5 @@
 import { Pool } from 'pg';
-import dotenv from 'dotenv';
-import { fileURLToPath } from 'node:url';
-
-dotenv.config({
-  path: fileURLToPath(new URL('../../.env', import.meta.url)),
-});
+import './env.js';
 
 const requiredDatabaseVariables = ['DB_HOST', 'DB_DATABASE', 'DB_USER', 'DB_PASSWORD'] as const;
 const missingDatabaseVariables = requiredDatabaseVariables.filter(

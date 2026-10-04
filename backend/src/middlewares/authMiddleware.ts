@@ -1,8 +1,9 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { BusinessRuleError } from "../errors/BusinessRuleError.js";
+import { env } from "../config/env.js";
 
-const JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key_local";
+const JWT_SECRET = env.jwtSecret;
 
 interface TokenPayload {
   id: string;

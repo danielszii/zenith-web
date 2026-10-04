@@ -1,11 +1,12 @@
 import app from "./app.js";
 import { testConnection } from "./config/database.js";
+import { env } from "./config/env.js";
 
-const port = Number(process.env.PORT || 3000);
+const port = env.port;
 
 async function startServer() {
   await testConnection();
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`Zenith API disponível em http://localhost:${port}`);
   });
 }

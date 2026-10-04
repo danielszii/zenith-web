@@ -10,6 +10,7 @@ import { CampeonatoController } from "../controllers/CampeonatoController.js";
 import { PartidaController } from "../controllers/PartidaController.js";
 import { EventoController } from "../controllers/EventoController.js";
 import { AuthController } from "../controllers/AuthController.js"; // Novo
+import { MobileController } from "../controllers/MobileController.js";
 
 import { AtletaService } from "../services/AtletaService.js";
 import { ClubeService } from "../services/ClubeService.js";
@@ -24,6 +25,8 @@ import { CampeonatoRepository } from "../repositories/CampeonatoRepository.js";
 import { EventoRepository } from "../repositories/EventoRepository.js";
 import { PartidaRepository } from "../repositories/PartidaRepository.js";
 import { UsuarioRepository } from "../repositories/UsuarioRepository.js"; // Novo
+import { MobileRepository } from "../repositories/MobileRepository.js";
+import { MobileService } from "../services/MobileService.js";
 
 import { CreateClubeDTO } from "../dtos/CreateClubeDTO.js";
 import { CreateCampeonatoDTO } from "../dtos/CreateCampeonatoDTO.js";
@@ -40,6 +43,7 @@ const campeonatoController = new CampeonatoController(new CampeonatoService(new 
 const partidaController = new PartidaController(new PartidaService(new PartidaRepository(), new EventoRepository()));
 const eventoController = new EventoController(new EventoService(new PartidaRepository(), new EventoRepository()));
 const authController = new AuthController(new AuthService(new UsuarioRepository())); // Novo
+const mobileController = new MobileController(new MobileService(new MobileRepository()));
 
 // ROTAS DE AUTENTICAÇÃO (PÚBLICAS)
 routes.post('/auth/registrar', validationMiddleware(CreateUsuarioDTO), (req, res, next) => authController.registrar(req, res, next));
@@ -81,5 +85,12 @@ routes.delete('/partidas/:id', (req, res, next) => partidaController.delete(req,
 // ROTAS DA SÚMULA E EVENTOS
 routes.post('/eventos', authMiddleware, roleMiddleware(['admin', 'mesario']), validationMiddleware(CreateEventoSumulaDTO), (req, res, next) => eventoController.store(req, res, next));
 routes.get('/partidas/:id/sumula', (req, res, next) => partidaController.showSumula(req, res, next));
+
+// APP MOBILE OFFLINE-FIRST
+routes.get('/mobile/mesarios', authMiddleware, roleMiddleware(['admin']), mobileController.officials);
+routes.get('/mobile/partidas', authMiddleware, roleMiddleware(['admin', 'mesario']), mobileController.list);
+routes.get('/mobile/partidas/:id/pacote', authMiddleware, roleMiddleware(['admin', 'mesario']), mobileController.package);
+routes.post('/mobile/sync', authMiddleware, roleMiddleware(['admin', 'mesario']), mobileController.sync);
+routes.post('/mobile/partidas/:id/atribuir', authMiddleware, roleMiddleware(['admin']), mobileController.assign);
 
 export default routes;

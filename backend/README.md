@@ -31,3 +31,22 @@ src/
 ├── models/         # Camada de Domínio: Entidades isoladas e fábricas estáticas de validação
 ├── repositories/   # Camada de Dados: Consultas SQL puras e persistência no PostgreSQL
 └── services/       # Regras de Negócio: Casos de uso e orquestração do pipeline do sistema
+# Integração mobile offline
+
+Depois de configurar `backend/.env`, aplique a estrutura de sincronização:
+
+```powershell
+npm run db:migrate
+```
+
+O servidor escuta em `0.0.0.0:3000`, permitindo acesso de aparelhos na mesma rede.
+
+Fluxo administrativo:
+
+1. cadastre um usuário com papel `mesario`;
+2. consulte `GET /mobile/mesarios` autenticado como administrador;
+3. atribua a partida com `POST /mobile/partidas/:id/atribuir` e `{ "usuarioId": "..." }`;
+4. o mesário entra no aplicativo e baixa o pacote em `GET /mobile/partidas/:id/pacote`;
+5. o aplicativo envia ações idempotentes para `POST /mobile/sync`.
+
+Cada lote é processado numa única transação. `operation_id` possui chave primária, portanto retries não duplicam gols, cartões ou assinaturas.

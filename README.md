@@ -38,8 +38,16 @@ npm run dev
 - Frontend: http://localhost:5173
 - API: http://localhost:3000
 - Saúde da API: http://localhost:3000/health
+- Central operacional: http://localhost:5173/management
 
 Também é possível iniciar os serviços separadamente com `npm run dev:backend` e `npm run dev:frontend`.
+
+## Central de gestão
+
+A rota `/management` consome a API real e permite gerenciar usuários, clubes, atletas,
+campeonatos, inscrições, classificação e a agenda de partidas do portal.
+As operações de súmula, escalação e eventos de jogo ficam reservadas ao aplicativo offline.
+Para criar campeonatos no portal, use uma sessão `admin`.
 
 ## Validação
 
