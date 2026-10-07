@@ -25,8 +25,8 @@ export class PartidaRepository {
     const query = `
       SELECT
         p.*,
-        json_build_object('nome', mandante.nome) AS mandante,
-        json_build_object('nome', visitante.nome) AS visitante,
+        json_build_object('nome', mandante.nome, 'brasao', mandante.brasao) AS mandante,
+        json_build_object('nome', visitante.nome, 'brasao', visitante.brasao) AS visitante,
         json_build_object('nome', campeonato.nome, 'categoria', campeonato.categoria) AS campeonato
       FROM partidas p
       JOIN clubes mandante ON mandante.id_clube = p.id_mandante

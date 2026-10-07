@@ -1,194 +1,139 @@
-import { useState, useEffect } from "react";
-import { Routes, Route, useNavigate, useLocation } from "react-router-dom";
-import { api } from "./services/api";
-
-// Importações dos Componentes
-import { Navbar } from "./components/Navbar";
-import { LiveMatchCards, Match } from "./components/LiveMatchCards";
-import { SearchBar } from "./components/SearchBar";
-import { PlayerProfile } from "./components/PlayerProfile";
-import { ChampionshipsPage } from "./components/ChampionshipsPage";
-import { Gallery } from "./components/Gallery";
-import { ThemeToggle } from "./components/ThemeToggle";
-import { Footer } from "./components/Footer";
-import { GamesAndResults } from "./components/GamesAndResults";
-import { ClubProfile } from "./components/ClubProfile";
-import { AdBanner } from "./components/AdBanner";
-import { Logo } from "./components/Logo";
-import { ManagementPage } from "./components/ManagementPage";
-
-// Ícones
-import { TrendingUp } from "lucide-react";
+import { useEffect, useState, type ReactNode } from 'react';
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { ArrowRight, Radio, ShieldCheck, Sparkles } from 'lucide-react';
+import { api } from './services/api';
+import { Navbar } from './components/Navbar';
+import { LiveMatchCards, type Match } from './components/LiveMatchCards';
+import { SearchBar } from './components/SearchBar';
+import { PlayerProfile } from './components/PlayerProfile';
+import { ChampionshipsPage } from './components/ChampionshipsPage';
+import { Gallery } from './components/Gallery';
+import { ThemeToggle } from './components/ThemeToggle';
+import { Footer } from './components/Footer';
+import { GamesAndResults } from './components/GamesAndResults';
+import { ClubProfile } from './components/ClubProfile';
+import { Logo } from './components/Logo';
+import { ManagementPage } from './components/ManagementPage';
+import { StatisticsPage } from './components/StatisticsPage';
+import { MatchCentre } from './components/MatchCentre';
+import { HomeStatsCentre } from './components/HomeStatsCentre';
+import { MatchTicker } from './components/MatchTicker';
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [loading, setLoading] = useState(true);
+  const currentPage = location.pathname.split('/')[1] || 'dashboard';
 
-  // Estados apenas para os dados da Dashboard
-  const [liveMatches, setLiveMatches] = useState<Match[]>([]);
-  const [loadingMatches, setLoadingMatches] = useState<boolean>(true);
+  const go = (page: string) => navigate(page === 'dashboard' ? '/' : `/${page}`);
 
-  // Mapeia o caminho da URL para a Navbar entender qual aba destacar
-  const currentPage = location.pathname.split("/")[1] || "dashboard";
-
-  const handleNavigate = (page: string) => {
-    if (page === "dashboard") {
-      navigate("/");
-    } else {
-      navigate(`/${page}`);
-    }
-  };
-
-  // Busca partidas ao vivo/em andamento
   useEffect(() => {
-    async function fetchLiveMatches() {
+    const load = async () => {
       try {
-        setLoadingMatches(true);
-        const response = await api.get("/partidas");
-
-        // Filtra para exibir apenas as partidas que estão "em_andamento" ou "agendadas" no banco
-        const partidasAoVivo = response.data.filter(
-          (partida: any) =>
-            partida.status === "em_andamento" || partida.status === "agendado",
-        );
-
-        setLiveMatches(partidasAoVivo);
+        const { data } = await api.get<Match[]>('/partidas');
+        setMatches(prev => {
+          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
+          return data;
+        });
       } catch (error) {
-        console.error("Erro ao carregar partidas:", error);
+        console.error('Erro ao carregar partidas:', error);
       } finally {
-        setLoadingMatches(false);
+        setLoading(false);
       }
-    }
+    };
 
-    void fetchLiveMatches();
-    const interval = window.setInterval(fetchLiveMatches, 5000);
-    return () => window.clearInterval(interval);
+    void load();
+    const timer = window.setInterval(load, 10000);
+    return () => window.clearInterval(timer);
   }, []);
 
   return (
-    <div className="min-h-screen bg-[var(--background)] transition-colors flex flex-col">
-      {/* Header Alinhado com a barra de pesquisa colada à direita com o ThemeToggle */}
-      <header className="backdrop-blur-xl bg-[var(--surface-glass)] border-b border-[var(--border)] sticky top-0 z-50 h-20 flex items-center">
-        <div className="w-full max-w-[95%] mx-auto px-6">
-          <div className="flex items-center w-full">
-            {/* GRUPO ESQUERDA: Logótipo + Menu de Navegação */}
-            <div className="flex items-center gap-8 shrink-0">
-              <div className="shrink-0 flex items-center">
-                <Logo onClick={() => navigate("/")} />
-              </div>
-
-              <nav className="flex items-center">
-                <Navbar activePage={currentPage} onNavigate={handleNavigate} />
-              </nav>
-            </div>
-
-            {/* GRUPO DIREITA: Barra de Pesquisa + ThemeToggle */}
-            <div className="ml-auto flex items-center gap-6">
-              {/* Barra de Pesquisa com tamanho ajustado */}
-              <div className="w-80 shrink-0">
-                <SearchBar onNavigate={handleNavigate} />
-              </div>
-
-              <div className="h-6 w-px bg-[var(--border)] shrink-0" />
-
-              {/* Apenas o controle de tema agora */}
-              <ThemeToggle />
-            </div>
+    <div className="flex min-h-screen flex-col text-[var(--foreground)]">
+      <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color:var(--background)]/85 backdrop-blur-2xl">
+        <div className="app-shell flex h-[72px] min-w-0 items-center gap-2 sm:gap-4">
+          <Logo onClick={() => navigate('/')} />
+          <div className="ml-auto min-w-0 md:ml-5">
+            <Navbar activePage={currentPage} onNavigate={go} />
+          </div>
+          <div className="ml-auto hidden w-64 2xl:block">
+            <SearchBar onNavigate={go} />
+          </div>
+          <div className="hidden sm:block">
+            <ThemeToggle />
           </div>
         </div>
       </header>
 
-      {/* Roteamento das páginas */}
       <Routes>
-        {/* Rota Raiz: Dashboard */}
-        <Route
-          path="/"
-          element={
-            /* main limpo e sem travas laterais */
-            <main className="py-8 flex-1 overflow-x-hidden w-full">
-              {/* 1. HERO: Partidas em Destaque */}
-              <section className="mb-12 w-full overflow-visible">
-                <div className="max-w-[90%] mx-auto mb-6 flex items-center gap-3">
-                  <h2 className="text-2xl text-[var(--foreground)] font-semibold">
-                    Partidas ao Vivo
-                  </h2>
-                  <div className="h-px flex-1 bg-[var(--border)]"></div>
-                </div>
-
-                {loadingMatches ? (
-                  <div className="text-sm text-[var(--muted-foreground)] animate-pulse py-4">
-                    Carregando partidas em tempo real...
-                  </div>
-                ) : (
-                  /* Renderize o componente diretamente! */
-                  <LiveMatchCards matches={liveMatches} />
-                )}
-              </section>
-
-              {/* =========================================================================
-                2. DIV CENTRALIZADORA DE 90% (AdBanner e Status)
-                Isso garante que os outros elementos continuem comportados no centro.
-               ========================================================================= */}
-              <div className="max-w-[90%] mx-auto w-full">
-                {/* Espaço Publicitário */}
-                <section className="mb-12">
-                  <AdBanner
-                    type="video"
-                    videoUrl="https://www.youtube.com/watch?v=dQw4w9WgXcQ"
-                    title="Parceiro Oficial 2026"
-                    description="Apoiando o esporte brasileiro"
-                    ctaText="Conheça Mais"
-                    ctaUrl="#"
-                  />
-                </section>
-
-                {/* Status do Sistema */}
-                <section>
-                  <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-                    <div className="flex items-center gap-3 mb-4">
-                      <TrendingUp className="w-5 h-5 text-[var(--success)]" />
-                      <h3 className="text-lg text-[var(--foreground)] font-semibold">
-                        Status do Sistema
-                      </h3>
-                      <span className="ml-auto flex items-center gap-2 px-3 py-1.5 bg-[var(--success)]/10 border border-[var(--success)]/30 rounded-lg text-xs font-medium">
-                        <span className="w-2 h-2 bg-[var(--success)] rounded-full animate-pulse"></span>
-                        <span className="text-[var(--success)]">
-                          Operacional
-                        </span>
-                      </span>
-                    </div>
-                    <p className="text-[var(--muted-foreground)] text-sm">
-                      Todos os sistemas funcionando normalmente. Última
-                      sincronização: há 2 minutos.
-                    </p>
-                  </div>
-                </section>
-              </div>
-            </main>
-          }
-        />
-
-        {/* Demais Rotas Públicas */}
+        <Route path="/" element={<Dashboard matches={matches} loading={loading} onExplore={() => navigate('/matches')} />} />
         <Route path="/players" element={<PlayerProfile />} />
         <Route path="/club" element={<ClubProfile />} />
         <Route path="/championships" element={<ChampionshipsPage />} />
         <Route path="/gallery" element={<Gallery />} />
         <Route path="/management" element={<ManagementPage />} />
-
-        <Route
-          path="/matches"
-          element={
-            <main className="p-8 flex-1">
-              <div className="max-w-[90%] mx-auto">
-                <GamesAndResults />
-              </div>
-            </main>
-          }
-        />
+        <Route path="/matches" element={<GamesAndResults />} />
+        <Route path="/matches/:id" element={<MatchCentre />} />
+        <Route path="/statistics" element={<StatisticsPage />} />
       </Routes>
 
-      {/* Footer */}
       <Footer />
+    </div>
+  );
+}
+
+function Dashboard({ matches, loading, onExplore }: { matches: Match[]; loading: boolean; onExplore: () => void }) {
+  return (
+    <main className="page-enter min-w-0 flex-1 pb-8">
+      {!loading && <MatchTicker matches={matches} />}
+
+      {/* Hero */}
+      <section className="border-b border-[var(--border)] bg-[var(--background)]">
+        <div className="app-shell flex min-h-[460px] flex-col justify-center py-20">
+          <p className="eyebrow mb-5">Plataforma oficial Zenith</p>
+          <h1 className="font-display max-w-3xl text-[clamp(2.6rem,9vw,7rem)] leading-[.86] tracking-[.015em]">
+            TODOS OS JOGOS.<br />
+            <span className="text-[var(--primary)]">UM SÓ LUGAR.</span>
+          </h1>
+        </div>
+      </section>
+
+      <section className="app-shell mt-4">
+        <div className="section-rule mb-6 flex items-end justify-between gap-4">
+          <div>
+            <p className="eyebrow">Agora no Zenith</p>
+            <h2 className="font-display mt-2 text-4xl tracking-wide md:text-5xl">CENTRAL DE PARTIDAS</h2>
+          </div>
+          <button onClick={onExplore} className="button-quiet hidden sm:inline-flex">
+            Ver calendário <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+        {loading ? (
+          <div className="grid gap-4 lg:grid-cols-2">
+            <div className="h-72 animate-pulse rounded-3xl bg-[var(--muted)] lg:col-span-2" />
+            <div className="h-56 animate-pulse rounded-3xl bg-[var(--muted)]" />
+            <div className="h-56 animate-pulse rounded-3xl bg-[var(--muted)]" />
+          </div>
+        ) : <LiveMatchCards matches={matches} />}
+      </section>
+
+      <HomeStatsCentre />
+
+      <section className="app-shell mt-20 grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] md:grid-cols-3">
+        <Feature icon={<Radio />} title="Placar ao vivo" text="Eventos chegam do aplicativo de súmula e aparecem no portal em segundos." />
+        <Feature icon={<ShieldCheck />} title="Dados oficiais" text="Escalações, cartões e resultados validados em um fluxo seguro." />
+        <Feature icon={<Sparkles />} title="Experiência completa" text="Informação clara para atletas, clubes, gestores e torcedores." />
+      </section>
+    </main>
+  );
+}
+
+function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
+  return (
+    <div className="bg-[var(--card)] p-6">
+      <div className="mb-5 grid h-10 w-10 place-items-center bg-[var(--primary)] text-[var(--primary-foreground)]">{icon}</div>
+      <h3 className="text-base font-bold">{title}</h3>
+      <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">{text}</p>
     </div>
   );
 }

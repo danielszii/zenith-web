@@ -22,13 +22,13 @@ export function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="flex items-center justify-center w-10 h-10 bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] rounded-xl border border-[var(--border)] transition-all"
-      aria-label="Toggle theme"
+      className="icon-button"
+      aria-label={theme === 'dark' ? 'Ativar tema claro' : 'Ativar tema escuro'}
     >
       {theme === 'dark' ? (
-        <Sun className="w-5 h-5 text-[var(--muted-foreground)]" />
+        <Sun className="h-4 w-4" />
       ) : (
-        <Moon className="w-5 h-5 text-[var(--muted-foreground)]" />
+        <Moon className="h-4 w-4" />
       )}
     </button>
   );

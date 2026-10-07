@@ -138,13 +138,13 @@ export function ManagementPage() {
     ["matches", "Partidas", CalendarDays],
   ] as const;
   return (
-    <main className="mx-auto w-full max-w-[95%] flex-1 px-6 py-8">
+    <main className="page-enter app-shell w-full flex-1 py-12">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--primary)]">
             Portal Zenith
           </p>
-          <h1 className="text-3xl font-bold">Gestão do portal</h1>
+          <h1 className="font-display mt-2 text-6xl font-normal tracking-wide">GESTÃO DO PORTAL</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Cadastros e informações públicas. A operação da súmula pertence ao
             aplicativo.

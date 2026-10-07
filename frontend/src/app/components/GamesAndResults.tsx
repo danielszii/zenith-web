@@ -1,348 +1,43 @@
-import { useState } from 'react';
-import { ChevronLeft, ChevronRight, Trophy, X, EyeOff, Radio } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { CalendarDays, Eye, EyeOff, MapPin, Radio, Search } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { api } from '../services/api';
+import type { Match } from '../types/api';
 
-interface Match {
-  id: string;
-  championship: string;
-  championshipIcon: string;
-  phase: string;
-  team1: {
-    name: string;
-    abbr: string;
-    logo: string;
-  };
-  team2: {
-    name: string;
-    abbr: string;
-    logo: string;
-  };
-  score1: number;
-  score2: number;
-  status: 'FINAL' | 'AO VIVO' | 'AGENDADO';
-  date: string;
-  region: string;
-}
-
-const mockMatches: Match[] = [
-  {
-    id: '1',
-    championship: 'Liga Brasileira de Basquete - Leste',
-    championshipIcon: '🏀',
-    phase: '#B · FASE DE GRUPOS · IDA-VOLTA',
-    team1: { name: 'Brasília', abbr: 'BRA', logo: '🔴' },
-    team2: { name: 'Typhoons', abbr: 'TYP', logo: '🟣' },
-    score1: 79,
-    score2: 80,
-    status: 'FINAL',
-    date: '2026-05-07',
-    region: 'americas',
-  },
-  {
-    id: '2',
-    championship: 'Campeonato Paulista de Vôlei',
-    championshipIcon: '🏐',
-    phase: '#2 · SEMI-FINAIS · PARTIDA ÚNICA',
-    team1: { name: 'Vilhena', abbr: 'VILN', logo: '🔴' },
-    team2: { name: 'Litoral FC', abbr: 'LITF', logo: '🟢' },
-    score1: 87,
-    score2: 69,
-    status: 'FINAL',
-    date: '2026-05-07',
-    region: 'americas',
-  },
-  {
-    id: '3',
-    championship: 'Copa Nacional de Futsal',
-    championshipIcon: '⚽',
-    phase: '#1 · SEMI-FINAIS · PARTIDA ÚNICA',
-    team1: { name: 'União', abbr: 'UNI', logo: '🟢' },
-    team2: { name: 'Aek FC', abbr: 'AEK', logo: '🟡' },
-    score1: 65,
-    score2: 78,
-    status: 'FINAL',
-    date: '2026-05-07',
-    region: 'americas',
-  },
-  {
-    id: '4',
-    championship: 'Liga Europeia de Futebol',
-    championshipIcon: '⚽',
-    phase: '#A · FASE DE GRUPOS · IDA-VOLTA',
-    team1: { name: 'Real Madrid', abbr: 'RMA', logo: '⚪' },
-    team2: { name: 'Barcelona', abbr: 'BAR', logo: '🔵' },
-    score1: 2,
-    score2: 1,
-    status: 'FINAL',
-    date: '2026-05-08',
-    region: 'europe',
-  },
-  {
-    id: '5',
-    championship: 'Liga Asiática de Basquete',
-    championshipIcon: '🏀',
-    phase: '#C · OITAVAS · IDA',
-    team1: { name: 'Tokyo Dragons', abbr: 'TOK', logo: '🔴' },
-    team2: { name: 'Seoul Tigers', abbr: 'SEO', logo: '🟠' },
-    score1: 92,
-    score2: 88,
-    status: 'FINAL',
-    date: '2026-05-08',
-    region: 'asia',
-  },
-];
-
-const regions = [
-  { id: 'all', label: 'Todos' },
-  { id: 'americas', label: 'Américas' },
-  { id: 'europe', label: 'Europa' },
-  { id: 'asia', label: 'Ásia' },
-  { id: 'africa', label: 'África' },
-  { id: 'oceania', label: 'Oceania' },
-];
-
-const generateDateRange = () => {
-  const dates = [];
-  const today = new Date('2026-05-08');
-
-  for (let i = -4; i <= 5; i++) {
-    const date = new Date(today);
-    date.setDate(today.getDate() + i);
-    dates.push({
-      dayName: date.toLocaleDateString('pt-BR', { weekday: 'short' }).toUpperCase(),
-      dayNumber: date.getDate().toString().padStart(2, '0'),
-      month: date.toLocaleDateString('pt-BR', { month: 'short' }).toUpperCase(),
-      fullDate: date.toISOString().split('T')[0],
-      isToday: i === 0,
-    });
-  }
-
-  return dates;
-};
+type Filter = 'todos' | 'em_andamento' | 'agendado' | 'encerrado';
 
 export function GamesAndResults() {
-  const [selectedRegion, setSelectedRegion] = useState('all');
-  const [selectedDate, setSelectedDate] = useState('2026-05-08');
+  const [matches, setMatches] = useState<Match[]>([]);
+  const [filter, setFilter] = useState<Filter>('todos');
+  const [query, setQuery] = useState('');
   const [hideScores, setHideScores] = useState(false);
-  const [showLiveOnly, setShowLiveOnly] = useState(false);
-  const [dateOffset, setDateOffset] = useState(0);
+  const [loading, setLoading] = useState(true);
 
-  const dates = generateDateRange();
-  const visibleDates = dates.slice(dateOffset, dateOffset + 7);
+  useEffect(() => {
+    const load = async () => {
+      try { setMatches((await api.get<Match[]>('/partidas')).data); }
+      finally { setLoading(false); }
+    };
+    void load();
+    const timer = window.setInterval(load, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
-  const filteredMatches = mockMatches.filter((match) => {
-    const regionMatch = selectedRegion === 'all' || match.region === selectedRegion;
-    const dateMatch = match.date === selectedDate;
-    const liveMatch = !showLiveOnly || match.status === 'AO VIVO';
-    return regionMatch && dateMatch && liveMatch;
-  });
+  const filtered = useMemo(() => matches.filter(match =>
+    (filter === 'todos' || match.status === filter)
+    && `${match.mandante?.nome} ${match.visitante?.nome} ${match.campeonato?.nome}`.toLowerCase().includes(query.toLowerCase()),
+  ), [matches, filter, query]);
 
-  const liveCount = mockMatches.filter((m) => m.status === 'AO VIVO').length;
-
-  const handlePrevDates = () => {
-    if (dateOffset > 0) setDateOffset(dateOffset - 1);
-  };
-
-  const handleNextDates = () => {
-    if (dateOffset < dates.length - 7) setDateOffset(dateOffset + 1);
-  };
-
-  return (
-    <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] overflow-hidden">
-      {/* Header */}
-      <div className="p-6 border-b border-[var(--border)]">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl text-[var(--foreground)] font-semibold">
-            Partidas & Resultados: {regions.find((r) => r.id === selectedRegion)?.label}
-          </h2>
-        </div>
-
-        {/* Region Filters */}
-        <div className="flex items-center gap-2 mb-6">
-          {regions.map((region) => (
-            <button
-              key={region.id}
-              onClick={() => setSelectedRegion(region.id)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                selectedRegion === region.id
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  : 'bg-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--surface-glass-hover)]'
-              }`}
-            >
-              {region.label}
-            </button>
-          ))}
-        </div>
-
-        {/* Date Carousel */}
-        <div className="flex items-center gap-3 mb-6">
-          <button
-            onClick={handlePrevDates}
-            disabled={dateOffset === 0}
-            className="w-10 h-10 rounded-lg bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border)] flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronLeft className="w-5 h-5 text-[var(--foreground)]" />
-          </button>
-
-          <div className="flex-1 flex items-center gap-2 overflow-hidden">
-            {visibleDates.map((date) => (
-              <button
-                key={date.fullDate}
-                onClick={() => setSelectedDate(date.fullDate)}
-                className={`flex-1 min-w-0 px-4 py-3 rounded-xl text-center transition-all ${
-                  selectedDate === date.fullDate
-                    ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                    : 'bg-[var(--muted)]/30 text-[var(--muted-foreground)] hover:bg-[var(--surface-glass-hover)]'
-                }`}
-              >
-                <div className="text-xs uppercase mb-1">{date.dayName}</div>
-                <div className="text-2xl font-semibold mb-0.5">{date.dayNumber}</div>
-                <div className="text-xs uppercase">{date.month}</div>
-                {date.isToday && (
-                  <div className="w-1.5 h-1.5 bg-[var(--success)] rounded-full mx-auto mt-1"></div>
-                )}
-              </button>
-            ))}
-          </div>
-
-          <button
-            onClick={handleNextDates}
-            disabled={dateOffset >= dates.length - 7}
-            className="w-10 h-10 rounded-lg bg-[var(--surface-glass)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border)] flex items-center justify-center transition-all disabled:opacity-30 disabled:cursor-not-allowed"
-          >
-            <ChevronRight className="w-5 h-5 text-[var(--foreground)]" />
-          </button>
-        </div>
-
-        {/* Toggles */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => setHideScores(!hideScores)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--muted)]/30 hover:bg-[var(--surface-glass-hover)] transition-all"
-          >
-            <EyeOff className="w-4 h-4 text-[var(--muted-foreground)]" />
-            <span className="text-sm text-[var(--muted-foreground)]">Ocultar Placares</span>
-            <div
-              className={`w-10 h-6 rounded-full transition-all ml-2 ${
-                hideScores ? 'bg-[var(--primary)]' : 'bg-[var(--switch-background)]'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 bg-white rounded-full mt-1 transition-all ${
-                  hideScores ? 'ml-5' : 'ml-1'
-                }`}
-              ></div>
-            </div>
-          </button>
-
-          <button
-            onClick={() => setShowLiveOnly(!showLiveOnly)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--muted)]/30 hover:bg-[var(--surface-glass-hover)] transition-all"
-          >
-            <Radio className="w-4 h-4 text-[var(--muted-foreground)]" />
-            <span className="text-sm text-[var(--muted-foreground)]">Ao Vivo ({liveCount})</span>
-            <div
-              className={`w-10 h-6 rounded-full transition-all ml-2 ${
-                showLiveOnly ? 'bg-[var(--primary)]' : 'bg-[var(--switch-background)]'
-              }`}
-            >
-              <div
-                className={`w-4 h-4 bg-white rounded-full mt-1 transition-all ${
-                  showLiveOnly ? 'ml-5' : 'ml-1'
-                }`}
-              ></div>
-            </div>
-          </button>
-        </div>
-      </div>
-
-      {/* Match Cards */}
-      <div className="p-6 space-y-4">
-        {filteredMatches.length === 0 ? (
-          <div className="text-center py-12">
-            <Trophy className="w-12 h-12 text-[var(--muted-foreground)] mx-auto mb-3" />
-            <p className="text-[var(--muted-foreground)]">
-              Nenhuma partida encontrada para esta data
-            </p>
-          </div>
-        ) : (
-          filteredMatches.map((match) => (
-            <div
-              key={match.id}
-              className="bg-[var(--background)] rounded-xl border border-[var(--border)] overflow-hidden"
-            >
-              {/* Championship Header */}
-              <div className="px-4 py-3 bg-[var(--muted)]/20 border-b border-[var(--border)]">
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">{match.championshipIcon}</span>
-                  <span className="text-sm font-semibold text-[var(--foreground)]">
-                    {match.championship}
-                  </span>
-                </div>
-              </div>
-
-              {/* Match Details */}
-              <div className="p-4">
-                <div className="flex items-center justify-between mb-4">
-                  <span className="text-xs text-[var(--muted-foreground)] uppercase">
-                    {match.phase}
-                  </span>
-                  <span className="text-xs text-[var(--muted-foreground)] uppercase font-semibold">
-                    {match.status}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  {/* Team 1 */}
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--muted)] flex items-center justify-center text-lg">
-                      {match.team1.logo}
-                    </div>
-                    <span className="font-semibold text-[var(--foreground)]">
-                      {match.team1.abbr}
-                    </span>
-                  </div>
-
-                  {/* Scores */}
-                  <div className="flex items-center gap-4 px-6">
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[var(--foreground)]">
-                        {hideScores ? '-' : match.score1}
-                      </span>
-                      {!hideScores && match.score1 > match.score2 && match.status === 'FINAL' && (
-                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-[var(--destructive)]"></div>
-                      )}
-                    </div>
-                    <span className="text-[var(--muted-foreground)]">-</span>
-                    <div className="flex items-center gap-2">
-                      <span className="text-2xl font-bold text-[var(--foreground)]">
-                        {hideScores ? '-' : match.score2}
-                      </span>
-                      {!hideScores && match.score2 > match.score1 && match.status === 'FINAL' && (
-                        <div className="w-0 h-0 border-l-[6px] border-l-transparent border-r-[6px] border-r-transparent border-b-[8px] border-b-[var(--destructive)]"></div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Team 2 */}
-                  <div className="flex items-center gap-3 flex-1 justify-end">
-                    <span className="font-semibold text-[var(--foreground)]">
-                      {match.team2.abbr}
-                    </span>
-                    <div className="w-8 h-8 rounded-lg bg-[var(--muted)] flex items-center justify-center text-lg">
-                      {match.team2.logo}
-                    </div>
-                  </div>
-
-                  {/* More Button */}
-                  <button className="ml-4 px-4 py-2 bg-[var(--muted)] hover:bg-[var(--surface-glass-hover)] rounded-lg text-sm font-medium text-[var(--foreground)] transition-all">
-                    + Mais
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
+  return <main className="page-enter app-shell flex-1 py-12">
+    <div className="grid gap-8 lg:grid-cols-[1fr_auto] lg:items-end"><div><p className="eyebrow">Agenda oficial</p><h1 className="font-display mt-3 text-6xl leading-none md:text-8xl">PARTIDAS & RESULTADOS</h1><p className="mt-4 max-w-xl text-sm leading-6 text-[var(--muted-foreground)]">Calendário, placares e atualizações oficiais das competições Zenith.</p></div><div className="flex gap-3"><Metric value={matches.filter(match => match.status === 'em_andamento').length} label="Ao vivo" /><Metric value={matches.length} label="Partidas" /></div></div>
+    <section className="surface-panel my-9 flex flex-col gap-4 rounded-2xl p-3 md:flex-row md:items-center"><div className="scrollbar-hide flex flex-1 items-center gap-1 overflow-x-auto rounded-xl bg-[var(--background)]/40 p-1">{([['todos', 'Todas'], ['em_andamento', 'Ao vivo'], ['agendado', 'Próximas'], ['encerrado', 'Finalizadas']] as [Filter, string][]).map(([id, label]) => <button key={id} onClick={() => setFilter(id)} className={`shrink-0 rounded-lg px-4 py-2.5 text-xs font-bold transition-all ${filter === id ? 'bg-[var(--primary)] text-[var(--primary-foreground)] shadow-sm' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]'}`}>{label}</button>)}</div><div className="flex items-center gap-2 rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-3 transition-colors focus-within:border-[var(--primary)]"><Search className="h-4 w-4 text-[var(--muted-foreground)]" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar equipe ou competição" className="w-full bg-transparent py-2.5 text-sm outline-none md:w-64" /></div><button onClick={() => setHideScores(!hideScores)} className="icon-button" title="Ocultar placares">{hideScores ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}</button></section>
+    {loading ? <div className="h-64 animate-pulse rounded-3xl bg-[var(--muted)]" /> : <div className="grid gap-3">{filtered.map(match => <MatchRow key={match.id_partida} match={match} hideScores={hideScores} />)}{!filtered.length && <div className="rounded-3xl border border-dashed border-[var(--border)] py-20 text-center"><CalendarDays className="mx-auto h-9 w-9 text-[var(--muted-foreground)]" /><p className="mt-4 font-bold">Nenhuma partida encontrada</p><p className="mt-1 text-sm text-[var(--muted-foreground)]">Ajuste os filtros para ver outros jogos.</p></div>}</div>}
+  </main>;
 }
+
+function MatchRow({ match, hideScores }: { match: Match; hideScores: boolean }) {
+  const live = match.status === 'em_andamento';
+  return <Link to={`/matches/${match.id_partida}`} className="group grid gap-5 rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-5 transition-all hover:-translate-y-0.5 hover:border-[color:var(--primary)]/35 md:grid-cols-[180px_1fr_auto] md:items-center"><div><p className="text-[.65rem] font-black uppercase tracking-[.15em] text-[var(--primary)]">{match.campeonato?.nome || 'Competição'}</p><p className="mt-2 flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]"><CalendarDays className="h-3.5 w-3.5" />{String(match.data).slice(0, 10).split('-').reverse().join('/')} · {match.hora.slice(0, 5)}</p><p className="mt-1 flex items-center gap-1.5 truncate text-xs text-[var(--muted-foreground)]"><MapPin className="h-3.5 w-3.5" />{match.local}</p></div><div className="grid grid-cols-[1fr_auto_1fr] items-center gap-4"><p className="text-right text-sm font-bold md:text-base">{match.mandante?.nome || 'Mandante'}</p><div className="font-display min-w-24 text-center text-4xl">{hideScores ? '– : –' : `${match.gols_mandante} : ${match.gols_visitante}`}</div><p className="text-sm font-bold md:text-base">{match.visitante?.nome || 'Visitante'}</p></div><span className={`inline-flex w-fit items-center gap-2 rounded-full px-3 py-2 text-[.65rem] font-black tracking-wider ${live ? 'bg-red-500/10 text-red-400' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'}`}>{live && <Radio className="h-3 w-3" />}{match.status.replaceAll('_', ' ').toUpperCase()}</span></Link>;
+}
+
+function Metric({ value, label }: { value: number; label: string }) { return <div className="min-w-24 rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-4"><strong className="font-display block text-4xl font-normal">{value}</strong><span className="text-[.65rem] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">{label}</span></div>; }

@@ -1,204 +1,131 @@
-import { useRef, useEffect } from 'react';
-import { Eye, Zap } from 'lucide-react';
+import { useMemo } from 'react';
+import { ArrowRight, CalendarDays, MapPin } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import type { Match } from '../types/api';
+import { prepareCarouselMatches } from '../data/mockMatches';
 
-export interface Match {
-  id_partida: string;
-  id_campeonato: string;
-  id_mandante: string;
-  id_visitante: string;
-  data: string;
-  hora: string;
-  local: string;
-  status: 'agendado' | 'em_andamento' | 'encerrado' | 'cancelado';
-  gols_mandante: number;
-  gols_visitante: number;
-  mandante?: { nome: string };
-  visitante?: { nome: string };
-  campeonato?: { nome: string; categoria?: string };
-}
+export type { Match };
 
-interface LiveMatchCardsProps {
-  matches: Match[];
-}
+const initials = (name: string) =>
+  name
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map(word => word[0])
+    .join('')
+    .toUpperCase();
 
-export function LiveMatchCards({ matches }: LiveMatchCardsProps) {
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
+export function LiveMatchCards({ matches }: { matches: Match[] }) {
+  // Ordena a sequência:
+  // 1. Jogos ao vivo têm PRIORIDADE
+  // 2. Próximas e finalizadas aparecem INTERCALADAS
+  // 3. Garante dados fictícios ricos para partidas em andamento
+  const orderedMatches = useMemo(() => {
+    return prepareCarouselMatches(matches);
+  }, [matches]);
 
-  useEffect(() => {
-    const container = scrollContainerRef.current;
-    if (!container) return;
-
-    // 1. SCROLL COM A RODINHA DO MOUSE (VERTICAL -> HORIZONTAL)
-    const handleWheel = (e: WheelEvent) => {
-      if (e.deltaY !== 0) {
-        e.preventDefault();
-        container.scrollLeft += e.deltaY;
-      }
-    };
-
-    // 2. SCROLL ARRASTANDO COM O PONTEIRO DO MOUSE (DRAG TO SCROLL)
-    let isDown = false;
-    let startX: number;
-    let scrollLeft: number;
-
-    const handleMouseDown = (e: MouseEvent) => {
-      isDown = true;
-      container.classList.add('active');
-      startX = e.pageX - container.offsetLeft;
-      scrollLeft = container.scrollLeft;
-    };
-
-    const handleMouseLeave = () => {
-      isDown = false;
-      container.classList.remove('active');
-    };
-
-    const handleMouseUp = () => {
-      isDown = false;
-      container.classList.remove('active');
-    };
-
-    const handleMouseMove = (e: MouseEvent) => {
-      if (!isDown) return;
-      e.preventDefault();
-      const x = e.pageX - container.offsetLeft;
-      const walk = (x - startX) * 1.5; // Ajuste de velocidade do arraste
-      container.scrollLeft = scrollLeft - walk;
-    };
-
-    // Adiciona os Eventos de Escuta no Container
-    container.addEventListener('wheel', handleWheel, { passive: false });
-    container.addEventListener('mousedown', handleMouseDown);
-    container.addEventListener('mouseleave', handleMouseLeave);
-    container.addEventListener('mouseup', handleMouseUp);
-    container.addEventListener('mousemove', handleMouseMove);
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel);
-      container.removeEventListener('mousedown', handleMouseDown);
-      container.removeEventListener('mouseleave', handleMouseLeave);
-      container.removeEventListener('mouseup', handleMouseUp);
-      container.removeEventListener('mousemove', handleMouseMove);
-    };
-  }, []);
-
-  // Gera as iniciais do clube dinamicamente caso não possua imagem
-  const getTeamLogo = (teamName: string) => {
-    const sigla = teamName
-      ?.split(' ')
-      .map((p) => p[0])
-      .slice(0, 3)
-      .join('')
-      .toUpperCase() || 'TM';
-
+  if (!orderedMatches.length) {
     return (
-      <div className="w-16 h-16 rounded-2xl bg-[var(--muted)] border border-[var(--border)] flex items-center justify-center shrink-0 select-none">
-        <span className="text-lg font-bold text-[var(--foreground)]">{sigla}</span>
-      </div>
-    );
-  };
-
-  if (!matches || matches.length === 0) {
-    return (
-      <div className="p-8 text-center bg-[var(--surface-glass)] border border-[var(--border)] rounded-2xl text-[var(--muted-foreground)] text-sm mx-auto max-w-[90%]">
-        Nenhuma partida em andamento no momento.
+      <div className="content-card px-6 py-14 text-center">
+        <CalendarDays className="mx-auto mb-4 h-8 w-8 text-[var(--muted-foreground)]" />
+        <p className="font-semibold">Nenhuma partida em destaque</p>
+        <p className="mt-1 text-sm text-[var(--muted-foreground)]">As próximas partidas aparecerão aqui.</p>
       </div>
     );
   }
 
   return (
-    /* O CONTAINER DE EVASÃO LATERAL:
-       - 'w-[100vw]' e 'left-1/2 -translate-x-1/2' rompem a barreira da div de 90%.
-       - 'px-[5vw]' faz com que o primeiro cartão se alinhe com o título 'Partidas ao Vivo'.
-       - 'cursor-grab active:cursor-grabbing' indica visualmente que o bloco pode ser arrastado.
-    */
-    <div
-      ref={scrollContainerRef}
-      className="w-[100vw] relative left-1/2 -translate-x-1/2 flex flex-nowrap gap-6 overflow-x-auto pb-4 scrollbar-hide px-[5vw] cursor-grab active:cursor-grabbing select-none"
-    >
-      {matches.map((match) => {
-        // Consumindo diretamente o novo mapeamento limpo do DTO do Back-end
-        const homeName = match.mandante?.nome || 'Mandante';
-        const awayName = match.visitante?.nome || 'Visitante';
-        const championshipName = match.campeonato?.nome || 'Zenith League';
-        const categoryName = match.campeonato?.categoria || 'Profissional';
-        
-        const formattedDate = match.data
-          ? new Date(match.data).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', timeZone: 'UTC' })
-          : 'A definir';
+    <div className="grid overflow-hidden border border-[var(--border)] bg-[var(--card)] md:grid-cols-2">
+      {orderedMatches.slice(0, 4).map(match => {
+        const home = match.mandante?.nome || 'Mandante';
+        const away = match.visitante?.nome || 'Visitante';
+        const live = match.status === 'em_andamento';
+        const status = live
+          ? 'Ao vivo'
+          : match.status === 'encerrado'
+          ? 'Final'
+          : match.status === 'cancelado'
+          ? 'Cancelada'
+          : 'Agendada';
+        const isMock = match.id_partida.startsWith('mock-');
+        const targetUrl = isMock ? '/matches' : `/matches/${match.id_partida}`;
 
         return (
-          /* 'pointer-events-auto' garante que cliques nos botões internos continuem funcionando de forma independente */
-          <div
+          <Link
+            to={targetUrl}
             key={match.id_partida}
-            className="flex-shrink-0 w-[580px] bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] overflow-hidden shadow-xl hover:border-[var(--muted)] hover:bg-[var(--surface-glass-hover)] transition-all pointer-events-auto first:ml-0"
+            className={`group relative border-b border-[var(--border)] p-5 transition-colors hover:bg-[var(--surface-glass-hover)] md:[&:nth-child(odd)]:border-r ${
+              live ? 'bg-[color:var(--card)]/90' : ''
+            }`}
           >
-            {/* Header do Card */}
-            <div className="px-5 py-3 bg-[var(--muted)] border-b border-[var(--border)]">
-              <p className="text-xs font-semibold text-[var(--foreground)] uppercase tracking-wider">
-                {championshipName} - {categoryName}
+            <div className="flex items-center justify-between gap-3">
+              <p className="truncate text-[.65rem] font-black uppercase tracking-[.16em] text-[var(--primary)]">
+                {match.campeonato?.nome || 'Zenith League'}
               </p>
+              <span
+                className={`inline-flex shrink-0 items-center gap-1.5 text-[.6rem] font-black uppercase tracking-wider ${
+                  live ? 'text-red-400' : 'text-[var(--muted-foreground)]'
+                }`}
+              >
+                {live && (
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500"></span>
+                  </span>
+                )}
+                {status}
+              </span>
             </div>
 
-            {/* Conteúdo Central (Placar Minimalista) */}
-            <div className="p-6">
-              <div className="grid grid-cols-5 gap-4 items-center mb-4">
-                
-                {/* Mandante */}
-                <div className="col-span-2 flex flex-col items-center text-center gap-2">
-                  {getTeamLogo(homeName)}
-                  <p className="font-semibold text-[var(--foreground)] text-sm leading-tight h-10 flex items-center justify-center line-clamp-2">
-                    {homeName}
-                  </p>
-                </div>
-
-                {/* Placar Central (Sem a caixa cinza) */}
-                <div className="col-span-1 flex flex-col items-center justify-center shrink-0">
-                  <p className="text-3xl text-[var(--foreground)] text-center font-bold tracking-tight whitespace-nowrap select-none">
-                    {match.gols_mandante}
-                    <span className="text-[var(--muted-foreground)] mx-3 font-light">×</span>
-                    {match.gols_visitante}
-                  </p>
-                </div>
-
-                {/* Visitante */}
-                <div className="col-span-2 flex flex-col items-center text-center gap-2">
-                  {getTeamLogo(awayName)}
-                  <p className="font-semibold text-[var(--foreground)] text-sm leading-tight h-10 flex items-center justify-center line-clamp-2">
-                    {awayName}
-                  </p>
-                </div>
-
-              </div>
-
-              {/* Rodapé do Card */}
-              <div className="flex items-center justify-between pt-4 border-t border-[var(--border)]">
-                <div className="text-left">
-                  <p className="text-xs text-[var(--muted-foreground)] mb-1 font-medium">
-                    {formattedDate} às {match.hora.slice(0, 5)}h
-                  </p>
-                  <p className="text-xs text-[var(--muted-foreground)] truncate max-w-[200px]">
-                    📍 {match.local || 'Local não informado'}
-                  </p>
-                </div>
-
-                {match.status === 'em_andamento' ? (
-                  <button className="px-4 py-2 bg-[var(--success)] hover:opacity-90 text-white rounded-lg font-medium text-xs transition-all flex items-center gap-2 active:scale-95">
-                    <Zap className="w-4 h-4 animate-pulse" />
-                    Em Direto
-                  </button>
+            <div className="my-7 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+              <Team name={home} />
+              <div className="font-display whitespace-nowrap text-5xl leading-none">
+                {match.status === 'agendado' ? (
+                  <span className="text-2xl text-[var(--muted-foreground)] font-normal">{match.hora.slice(0, 5)}</span>
                 ) : (
-                  <button className="px-4 py-2 bg-[var(--surface-glass-hover)] hover:bg-[var(--muted)] border border-[var(--border)] text-[var(--foreground)] rounded-lg font-medium text-xs transition-all flex items-center gap-2 active:scale-95">
-                    <Eye className="w-4 h-4" />
-                    Ver Detalhes
-                  </button>
+                  <>
+                    {match.gols_mandante}
+                    <span className="mx-2 text-[var(--muted-foreground)]">:</span>
+                    {match.gols_visitante}
+                  </>
                 )}
               </div>
-
+              <Team name={away} right />
             </div>
-          </div>
+
+            <div className="flex items-center gap-4 border-t border-[var(--border)] pt-4 text-[.7rem] text-[var(--muted-foreground)]">
+              <span className="flex items-center gap-1.5">
+                <CalendarDays className="h-3.5 w-3.5" />
+                {formatDate(match.data)} · {match.hora.slice(0, 5)}
+              </span>
+              <span className="hidden min-w-0 items-center gap-1.5 sm:flex">
+                <MapPin className="h-3.5 w-3.5 shrink-0" />
+                <span className="truncate">{match.local}</span>
+              </span>
+              <ArrowRight className="ml-auto h-4 w-4 text-[var(--primary)] transition-transform group-hover:translate-x-1" />
+            </div>
+          </Link>
         );
       })}
     </div>
   );
+}
+
+function Team({ name, right }: { name: string; right?: boolean }) {
+  return (
+    <div className={`min-w-0 ${right ? 'text-right' : ''}`}>
+      <span
+        className={`grid h-10 w-10 place-items-center border border-[var(--border)] bg-[var(--muted)] text-xs font-black ${
+          right ? 'ml-auto' : ''
+        }`}
+      >
+        {initials(name)}
+      </span>
+      <p className="mt-2 truncate text-xs font-extrabold sm:text-sm">{name}</p>
+    </div>
+  );
+}
+
+function formatDate(value: string) {
+  return String(value).slice(0, 10).split('-').reverse().join('/');
 }

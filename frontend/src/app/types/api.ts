@@ -60,8 +60,8 @@ export interface Match {
   status: MatchStatus;
   gols_mandante: number;
   gols_visitante: number;
-  mandante?: { nome: string };
-  visitante?: { nome: string };
+  mandante?: { nome: string; brasao?: string | null };
+  visitante?: { nome: string; brasao?: string | null };
   campeonato?: { nome: string; categoria?: string };
 }
 

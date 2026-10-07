@@ -1,39 +1,9 @@
-interface LogoProps {
-  showText?: boolean;
-  color?: 'primary' | 'white' | 'muted' | 'none';
-  className?: string;
-  onClick?: () => void;
-}
-
-export function Logo({ showText = true, color = 'white', className = '', onClick }: LogoProps) {
-  
-  const colorFilters = {
-    white: 'brightness-0 invert',
-    muted: 'opacity-50 brightness-0 invert',
-    primary: 'invert-[65%] sepia-[6%] saturate-[22%] hue-rotate-[314deg] brightness-[91%] contrast-[84%]',
-    none: ''
-  };
-
-  return (
-    <div 
-      onClick={onClick}
-      className={`flex items-center gap-3.5 cursor-pointer select-none transition-all duration-200 py-1.5 ${className}`}
-    >
-      {/* 
-        Aumentado de h-9 (36px) para h-11 (44px). 
-        Isso equipara o tamanho ao padrão dos inputs e botões altos do header.
-      */}
-      <img 
-        src="/Logotipo Zenith.svg" 
-        alt="Zenith Logo" 
-        className={`h-9 w-auto object-contain transition-all duration-200 ${colorFilters[color]}`}
-      />
-      
-      {/* Texto da Logo ajustado para text-2xl para acompanhar o tamanho */}
-      {showText && (
-        <h1 className="text-2xl font-bold text-[var(--foreground)] tracking-wider uppercase font-mono mt-0.5">
-        </h1>
-      )}
-    </div>
-  );
+interface LogoProps { showText?: boolean; className?: string; onClick?: () => void }
+export function Logo({ showText = true, className = '', onClick }: LogoProps) {
+  return <button onClick={onClick} className={`group flex items-center gap-3 ${className}`} aria-label="Ir para o início">
+    <span className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--foreground)] shadow-lg shadow-black/10">
+      <img src="/Logotipo Zenith.svg" alt="" className="h-6 w-6 object-contain brightness-0"/>
+    </span>
+    {showText && <span className="hidden text-left lg:block"><span className="font-display block text-[1.65rem] leading-none tracking-[.06em]">ZENITH</span><span className="block text-[.55rem] font-bold tracking-[.24em] text-[var(--muted-foreground)]">SPORTS OS</span></span>}
+  </button>;
 }

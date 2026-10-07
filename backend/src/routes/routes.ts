@@ -11,6 +11,7 @@ import { PartidaController } from "../controllers/PartidaController.js";
 import { EventoController } from "../controllers/EventoController.js";
 import { AuthController } from "../controllers/AuthController.js"; // Novo
 import { MobileController } from "../controllers/MobileController.js";
+import { EstatisticaController } from "../controllers/EstatisticaController.js";
 
 import { AtletaService } from "../services/AtletaService.js";
 import { ClubeService } from "../services/ClubeService.js";
@@ -27,6 +28,8 @@ import { PartidaRepository } from "../repositories/PartidaRepository.js";
 import { UsuarioRepository } from "../repositories/UsuarioRepository.js"; // Novo
 import { MobileRepository } from "../repositories/MobileRepository.js";
 import { MobileService } from "../services/MobileService.js";
+import { EstatisticaService } from "../services/EstatisticaService.js";
+import { EstatisticaRepository } from "../repositories/EstatisticaRepository.js";
 
 import { CreateClubeDTO } from "../dtos/CreateClubeDTO.js";
 import { CreateCampeonatoDTO } from "../dtos/CreateCampeonatoDTO.js";
@@ -44,6 +47,7 @@ const partidaController = new PartidaController(new PartidaService(new PartidaRe
 const eventoController = new EventoController(new EventoService(new PartidaRepository(), new EventoRepository()));
 const authController = new AuthController(new AuthService(new UsuarioRepository())); // Novo
 const mobileController = new MobileController(new MobileService(new MobileRepository()));
+const estatisticaController = new EstatisticaController(new EstatisticaService(new EstatisticaRepository()));
 
 // ROTAS DE AUTENTICAÇÃO (PÚBLICAS)
 routes.post('/auth/registrar', validationMiddleware(CreateUsuarioDTO), (req, res, next) => authController.registrar(req, res, next));
@@ -65,6 +69,9 @@ routes.delete('/campeonatos/:id', (req, res, next) => campeonatoController.delet
 routes.get('/campeonatos/:id', (req, res, next) => campeonatoController.show(req, res, next));
 routes.post('/campeonatos/inscricoes', (req, res, next) => campeonatoController.inscreverClube(req, res, next));
 routes.get('/campeonatos/:id/tabela', (req, res, next) => campeonatoController.showTabela(req, res, next));
+
+// CENTRAL PÚBLICA DO PORTAL
+routes.get('/public/estatisticas', (req, res, next) => estatisticaController.index(req, res, next));
 
 // ROTAS DE ATLETAS
 routes.post('/atletas', validationMiddleware(CreateAtletaDTO), (req, res, next) => atletaController.store(req, res, next));
