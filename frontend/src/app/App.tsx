@@ -1,9 +1,8 @@
-import { useEffect, useState, type ReactNode } from 'react';
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
-import { ArrowRight, Radio, ShieldCheck, Sparkles } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { api } from './services/api';
 import { Navbar } from './components/Navbar';
-import { LiveMatchCards, type Match } from './components/LiveMatchCards';
+import type { Match } from './types/api';
 import { SearchBar } from './components/SearchBar';
 import { PlayerProfile } from './components/PlayerProfile';
 import { ChampionshipsPage } from './components/ChampionshipsPage';
@@ -18,24 +17,46 @@ import { StatisticsPage } from './components/StatisticsPage';
 import { MatchCentre } from './components/MatchCentre';
 import { HomeStatsCentre } from './components/HomeStatsCentre';
 import { MatchTicker } from './components/MatchTicker';
+import { HomeCompetitions } from './components/HomeCompetitions';
+import { HomeFeaturedAthletes } from './components/HomeFeaturedAthletes';
+import { AthletesPage } from './components/AthletesPage';
+
+const pageRoutes: Record<string, string> = {
+  dashboard: '/',
+  championships: '/competicoes',
+  matches: '/partidas',
+  statistics: '/estatisticas',
+  gallery: '/midia',
+  management: '/gestao',
+  players: '/atletas',
+  club: '/clubes',
+};
+
+const routePages: Record<string, string> = {
+  competicoes: 'championships',
+  partidas: 'matches',
+  estatisticas: 'statistics',
+  midia: 'gallery',
+  gestao: 'management',
+  atletas: 'players',
+  clubes: 'club',
+};
 
 export default function App() {
   const navigate = useNavigate();
   const location = useLocation();
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
-  const currentPage = location.pathname.split('/')[1] || 'dashboard';
+  const routeSegment = location.pathname.split('/')[1];
+  const currentPage = routePages[routeSegment] || 'dashboard';
 
-  const go = (page: string) => navigate(page === 'dashboard' ? '/' : `/${page}`);
+  const go = (page: string) => navigate(pageRoutes[page] || '/');
 
   useEffect(() => {
     const load = async () => {
       try {
         const { data } = await api.get<Match[]>('/partidas');
-        setMatches(prev => {
-          if (JSON.stringify(prev) === JSON.stringify(data)) return prev;
-          return data;
-        });
+        setMatches(previous => JSON.stringify(previous) === JSON.stringify(data) ? previous : data);
       } catch (error) {
         console.error('Erro ao carregar partidas:', error);
       } finally {
@@ -66,15 +87,23 @@ export default function App() {
       </header>
 
       <Routes>
-        <Route path="/" element={<Dashboard matches={matches} loading={loading} onExplore={() => navigate('/matches')} />} />
-        <Route path="/players" element={<PlayerProfile />} />
-        <Route path="/club" element={<ClubProfile />} />
-        <Route path="/championships" element={<ChampionshipsPage />} />
-        <Route path="/gallery" element={<Gallery />} />
-        <Route path="/management" element={<ManagementPage />} />
-        <Route path="/matches" element={<GamesAndResults />} />
-        <Route path="/matches/:id" element={<MatchCentre />} />
-        <Route path="/statistics" element={<StatisticsPage />} />
+        <Route path="/" element={<Dashboard matches={matches} loading={loading} />} />
+        <Route path="/atletas" element={<AthletesPage />} />
+        <Route path="/atletas/:id" element={<PlayerProfile />} />
+        <Route path="/clubes/:id?" element={<ClubProfile />} />
+        <Route path="/competicoes" element={<ChampionshipsPage />} />
+        <Route path="/midia" element={<Gallery />} />
+        <Route path="/gestao" element={<ManagementPage />} />
+        <Route path="/partidas" element={<GamesAndResults />} />
+        <Route path="/partidas/:id" element={<MatchCentre />} />
+        <Route path="/estatisticas" element={<StatisticsPage />} />
+        <Route path="/players/:id?" element={<LegacyRedirect target="/atletas" />} />
+        <Route path="/club/:id?" element={<LegacyRedirect target="/clubes" />} />
+        <Route path="/championships" element={<Navigate to="/competicoes" replace />} />
+        <Route path="/gallery" element={<Navigate to="/midia" replace />} />
+        <Route path="/management" element={<Navigate to="/gestao" replace />} />
+        <Route path="/matches/:id?" element={<LegacyRedirect target="/partidas" />} />
+        <Route path="/statistics" element={<Navigate to="/estatisticas" replace />} />
       </Routes>
 
       <Footer />
@@ -82,58 +111,20 @@ export default function App() {
   );
 }
 
-function Dashboard({ matches, loading, onExplore }: { matches: Match[]; loading: boolean; onExplore: () => void }) {
+function Dashboard({ matches, loading }: { matches: Match[]; loading: boolean }) {
   return (
     <main className="page-enter min-w-0 flex-1 pb-8">
       {!loading && <MatchTicker matches={matches} />}
 
-      {/* Hero */}
-      <section className="border-b border-[var(--border)] bg-[var(--background)]">
-        <div className="app-shell flex min-h-[460px] flex-col justify-center py-20">
-          <p className="eyebrow mb-5">Plataforma oficial Zenith</p>
-          <h1 className="font-display max-w-3xl text-[clamp(2.6rem,9vw,7rem)] leading-[.86] tracking-[.015em]">
-            TODOS OS JOGOS.<br />
-            <span className="text-[var(--primary)]">UM SÓ LUGAR.</span>
-          </h1>
-        </div>
-      </section>
-
-      <section className="app-shell mt-4">
-        <div className="section-rule mb-6 flex items-end justify-between gap-4">
-          <div>
-            <p className="eyebrow">Agora no Zenith</p>
-            <h2 className="font-display mt-2 text-4xl tracking-wide md:text-5xl">CENTRAL DE PARTIDAS</h2>
-          </div>
-          <button onClick={onExplore} className="button-quiet hidden sm:inline-flex">
-            Ver calendário <ArrowRight className="h-4 w-4" />
-          </button>
-        </div>
-        {loading ? (
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="h-72 animate-pulse rounded-3xl bg-[var(--muted)] lg:col-span-2" />
-            <div className="h-56 animate-pulse rounded-3xl bg-[var(--muted)]" />
-            <div className="h-56 animate-pulse rounded-3xl bg-[var(--muted)]" />
-          </div>
-        ) : <LiveMatchCards matches={matches} />}
-      </section>
-
+      <HomeFeaturedAthletes />
+      <HomeCompetitions />
       <HomeStatsCentre />
-
-      <section className="app-shell mt-20 grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] md:grid-cols-3">
-        <Feature icon={<Radio />} title="Placar ao vivo" text="Eventos chegam do aplicativo de súmula e aparecem no portal em segundos." />
-        <Feature icon={<ShieldCheck />} title="Dados oficiais" text="Escalações, cartões e resultados validados em um fluxo seguro." />
-        <Feature icon={<Sparkles />} title="Experiência completa" text="Informação clara para atletas, clubes, gestores e torcedores." />
-      </section>
     </main>
   );
 }
 
-function Feature({ icon, title, text }: { icon: ReactNode; title: string; text: string }) {
-  return (
-    <div className="bg-[var(--card)] p-6">
-      <div className="mb-5 grid h-10 w-10 place-items-center bg-[var(--primary)] text-[var(--primary-foreground)]">{icon}</div>
-      <h3 className="text-base font-bold">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-[var(--muted-foreground)]">{text}</p>
-    </div>
-  );
+function LegacyRedirect({ target }: { target: string }) {
+  const location = useLocation();
+  const id = location.pathname.split('/')[2];
+  return <Navigate to={id ? `${target}/${id}` : target} replace />;
 }

@@ -48,7 +48,7 @@ export function LiveMatchCards({ matches }: { matches: Match[] }) {
           ? 'Cancelada'
           : 'Agendada';
         const isMock = match.id_partida.startsWith('mock-');
-        const targetUrl = isMock ? '/matches' : `/matches/${match.id_partida}`;
+        const targetUrl = isMock ? '/partidas' : `/partidas/${match.id_partida}`;
 
         return (
           <Link

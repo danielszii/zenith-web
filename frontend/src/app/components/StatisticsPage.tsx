@@ -93,7 +93,7 @@ export function StatisticsPage() {
 
       <section className="app-shell mt-5 rounded-3xl border border-[var(--border)] bg-[linear-gradient(120deg,var(--card),color-mix(in_srgb,var(--primary),transparent_94%))] p-6 md:flex md:items-center md:justify-between md:p-8">
         <div className="flex items-start gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)]"><Medal className="h-5 w-5" /></div><div><h3 className="text-lg font-extrabold">Cada evento conta uma história</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">Os dados vêm das súmulas registradas no aplicativo e são consolidados automaticamente no portal.</p></div></div>
-        <a href="/matches" className="button-secondary mt-5 md:mt-0">Ver partidas <ArrowUpRight className="h-4 w-4" /></a>
+        <a href="/partidas" className="button-secondary mt-5 md:mt-0">Ver partidas <ArrowUpRight className="h-4 w-4" /></a>
       </section>
     </main>
   );

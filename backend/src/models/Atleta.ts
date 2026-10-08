@@ -7,6 +7,7 @@ export type propsAtleta = {
   nome: string;
   cpf: string;
   rg?: string;
+  foto_perfil?: string;
   data_nasc: string | Date;
   tipo_sanguineo: string;
   id_clube: string;
@@ -24,6 +25,7 @@ export class Atleta {
     tipo_sanguineo: string,
     id_clube: string,
     rg?: string,
+    foto_perfil?: string,
     peso?: number,
     altura?: number,
     status?: string,
@@ -45,6 +47,7 @@ export class Atleta {
       nome,
       cpf,
       rg,
+      foto_perfil,
       data_nasc: dataConvertida,
       tipo_sanguineo,
       id_clube,
@@ -69,6 +72,9 @@ export class Atleta {
   }
   public get rg() {
     return this.props.rg;
+  }
+  public get foto_perfil() {
+    return this.props.foto_perfil;
   }
   public get data_nasc() {
     return this.props.data_nasc;

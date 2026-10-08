@@ -14,6 +14,7 @@ export class AtletaService {
       dados.tipo_sanguineo,
       dados.id_clube,
       dados.rg,
+      dados.foto_perfil,
       dados.peso,
       dados.altura,
       dados.status,

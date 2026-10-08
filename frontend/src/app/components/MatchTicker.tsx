@@ -88,7 +88,7 @@ function TickerCard({ match, duplicate }: { match: Match; duplicate: boolean }) 
   const home = match.mandante?.nome || 'Mandante';
   const away = match.visitante?.nome || 'Visitante';
   const isMock = match.id_partida.startsWith('mock-');
-  const targetUrl = isMock ? '/matches' : `/matches/${match.id_partida}`;
+  const targetUrl = isMock ? '/partidas' : `/partidas/${match.id_partida}`;
 
   return (
     <Link 

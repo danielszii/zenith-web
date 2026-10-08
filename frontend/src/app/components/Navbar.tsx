@@ -1,4 +1,4 @@
-import { BarChart3, CalendarDays, Images, LayoutDashboard, Trophy } from 'lucide-react';
+import { BarChart3, CalendarDays, Images, LayoutDashboard, Trophy, Users } from 'lucide-react';
 
 interface NavbarProps {
   activePage: string;
@@ -9,6 +9,7 @@ const items = [
   { id: 'dashboard', label: 'Início', icon: LayoutDashboard },
   { id: 'championships', label: 'Competições', icon: Trophy },
   { id: 'matches', label: 'Partidas', icon: CalendarDays },
+  { id: 'players', label: 'Atletas', icon: Users },
   { id: 'statistics', label: 'Estatísticas', icon: BarChart3 },
   { id: 'gallery', label: 'Mídia', icon: Images },
 ];

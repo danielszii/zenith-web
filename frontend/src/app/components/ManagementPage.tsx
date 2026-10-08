@@ -47,6 +47,7 @@ const blankAthlete = {
   nome: "",
   cpf: "",
   rg: "",
+  foto_perfil: "",
   data_nasc: "",
   status: "ativo",
   peso: "",
@@ -485,6 +486,7 @@ function Athletes({
       nome: a.nome,
       cpf: a.cpf,
       rg: a.rg || "",
+      foto_perfil: a.foto_perfil || "",
       data_nasc: dateOnly(a.data_nasc),
       status: a.status,
       peso: a.peso?.toString() || "",
@@ -518,6 +520,13 @@ function Athletes({
               placeholder="RG"
               value={form.rg}
               onChange={(e) => setForm({ ...form, rg: e.target.value })}
+            />
+            <input
+              className={field}
+              type="url"
+              placeholder="URL da foto do atleta"
+              value={form.foto_perfil}
+              onChange={(e) => setForm({ ...form, foto_perfil: e.target.value })}
             />
             <input
               className={field}

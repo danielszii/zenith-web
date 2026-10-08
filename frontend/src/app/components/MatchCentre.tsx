@@ -20,12 +20,12 @@ export function MatchCentre() {
   }, [id]);
 
   if (loading) return <main className="app-shell flex-1 py-16"><div className="h-96 animate-pulse rounded-3xl bg-[var(--muted)]" /></main>;
-  if (!sheet) return <main className="app-shell flex-1 py-20 text-center"><p className="font-display text-5xl">PARTIDA NÃO ENCONTRADA</p><Link to="/matches" className="button-secondary mt-6">Voltar às partidas</Link></main>;
+  if (!sheet) return <main className="app-shell flex-1 py-20 text-center"><p className="font-display text-5xl">PARTIDA NÃO ENCONTRADA</p><Link to="/partidas" className="button-secondary mt-6">Voltar às partidas</Link></main>;
   const match = sheet.detalhes_partida;
   const live = match.status === 'em_andamento';
 
   return <main className="page-enter flex-1 pb-16">
-    <section className="app-shell pt-10"><Link to="/matches" className="button-quiet"><ArrowLeft className="h-4 w-4" /> Todas as partidas</Link></section>
+    <section className="app-shell pt-10"><Link to="/partidas" className="button-quiet"><ArrowLeft className="h-4 w-4" /> Todas as partidas</Link></section>
     <section className="app-shell mt-7 overflow-hidden rounded-[2rem] border border-[var(--border)] bg-[var(--card)]">
       <div className="border-b border-[var(--border)] p-6 text-center md:p-8"><div className="flex flex-wrap items-center justify-center gap-3"><span className="eyebrow">{match.nome_campeonato}</span><span className={`inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-[.65rem] font-black tracking-wider ${live ? 'bg-red-500/10 text-red-400' : 'bg-[var(--muted)] text-[var(--muted-foreground)]'}`}>{live && <Radio className="h-3 w-3 animate-pulse" />}{statusLabel(match.status)}</span></div><p className="mt-4 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[var(--muted-foreground)]"><span className="flex items-center gap-1.5"><CalendarDays className="h-3.5 w-3.5" />{formatDate(match.data)}</span><span className="flex items-center gap-1.5"><Clock3 className="h-3.5 w-3.5" />{match.hora.slice(0, 5)}</span><span className="flex items-center gap-1.5"><MapPin className="h-3.5 w-3.5" />{match.local}</span></p></div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 px-4 py-12 sm:gap-8 md:px-12 md:py-16"><Team name={match.nome_mandante} /><div className="text-center"><p className="font-display whitespace-nowrap text-6xl leading-none sm:text-8xl">{match.gols_mandante}<span className="mx-3 text-[var(--muted-foreground)]">:</span>{match.gols_visitante}</p>{live && <p className="mt-4 inline-flex items-center gap-2 text-xs font-extrabold uppercase tracking-widest text-red-400"><RefreshCw className="h-3.5 w-3.5 animate-spin" /> atualizando ao vivo</p>}</div><Team name={match.nome_visitante} right /></div>

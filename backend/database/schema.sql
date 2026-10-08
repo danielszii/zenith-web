@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS atletas (
   nome VARCHAR(150) NOT NULL,
   cpf VARCHAR(14) NOT NULL UNIQUE,
   rg VARCHAR(30),
+  foto_perfil TEXT,
   data_nasc DATE NOT NULL,
   status VARCHAR(30) NOT NULL DEFAULT 'ativo',
   peso NUMERIC(5,2),

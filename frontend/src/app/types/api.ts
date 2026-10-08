@@ -29,6 +29,7 @@ export interface Athlete {
   nome: string;
   cpf: string;
   rg?: string | null;
+  foto_perfil?: string | null;
   data_nasc: string;
   status: string;
   peso?: number | null;

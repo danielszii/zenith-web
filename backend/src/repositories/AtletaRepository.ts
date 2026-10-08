@@ -4,8 +4,8 @@ import { propsAtleta } from "../models/Atleta.js";
 export class AtletaRepository {
   async create(atleta: propsAtleta): Promise<propsAtleta> {
     const query = `
-      INSERT INTO atletas (id_atleta, nome, cpf, rg, data_nasc, status, peso, altura, tipo_sanguineo, id_clube)
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      INSERT INTO atletas (id_atleta, nome, cpf, rg, foto_perfil, data_nasc, status, peso, altura, tipo_sanguineo, id_clube)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       RETURNING *;
     `;
 
@@ -14,6 +14,7 @@ export class AtletaRepository {
       atleta.nome,
       atleta.cpf,
       atleta.rg || null,
+      atleta.foto_perfil || null,
       atleta.data_nasc,
       atleta.status || "ativo",
       atleta.peso || null,
@@ -39,8 +40,8 @@ export class AtletaRepository {
   async update(id: string, data: any) {
     const query = `
     UPDATE atletas 
-    SET nome = $1, cpf = $2, data_nasc = $3, status = $4, peso = $5, altura = $6, tipo_sanguineo = $7
-    WHERE id_atleta = $8 RETURNING *;
+    SET nome = $1, cpf = $2, data_nasc = $3, status = $4, peso = $5, altura = $6, tipo_sanguineo = $7, foto_perfil = $8
+    WHERE id_atleta = $9 RETURNING *;
   `;
     const values = [
       data.nome,
@@ -50,6 +51,7 @@ export class AtletaRepository {
       data.peso || null,
       data.altura || null,
       data.tipo_sanguineo,
+      data.foto_perfil || null,
       id,
     ];
     const { rows } = await pool.query(query, values);

@@ -4,7 +4,7 @@
   --font-size: 16px;
   --font-weight-normal: 400;
   --font-weight-medium: 600;
-  --radius: 1rem;
+  --radius: .75rem;
   --spacing: .25rem;
   --text-base: 1rem;
   --text-lg: 1.125rem;
@@ -79,12 +79,12 @@
   --color-border: var(--border); --color-input: var(--input); --color-input-background: var(--input-background);
   --color-switch-background: var(--switch-background); --color-ring: var(--ring);
   --color-chart-1: var(--chart-1); --color-chart-2: var(--chart-2); --color-chart-3: var(--chart-3); --color-chart-4: var(--chart-4); --color-chart-5: var(--chart-5);
-  --radius-sm: calc(var(--radius) - 6px); --radius-md: calc(var(--radius) - 3px); --radius-lg: var(--radius); --radius-xl: calc(var(--radius) + 6px);
+  --radius-sm: .75rem; --radius-md: .75rem; --radius-lg: .75rem; --radius-xl: .75rem;
   --spacing: var(--spacing);
 }
 
 @layer base {
-  * { @apply border-border outline-ring/50; }
+  *, *::before, *::after { @apply border-border outline-ring/50; border-radius: var(--radius) !important; }
   html { font-size: var(--font-size); scroll-behavior: smooth; }
   body { @apply bg-background text-foreground; font-family: 'Inter', sans-serif; text-rendering: optimizeLegibility; }
   button, input, select, textarea { font: inherit; }
@@ -115,7 +115,7 @@
   min-height: 2.875rem;
   padding: .75rem 1.15rem;
   border: 1px solid color-mix(in srgb, var(--primary), white 12%);
-  border-radius: .9rem;
+  border-radius: var(--radius);
   background: var(--primary);
   color: var(--primary-foreground);
   box-shadow: 0 10px 30px color-mix(in srgb, var(--primary), transparent 82%);
@@ -127,7 +127,7 @@
   min-height: 2.75rem;
   padding: .7rem 1rem;
   border: 1px solid var(--border);
-  border-radius: .85rem;
+  border-radius: var(--radius);
   background: var(--surface-glass);
   color: var(--foreground);
   font-size: .8125rem;
@@ -140,7 +140,7 @@
   height: 2.5rem;
   flex: 0 0 auto;
   border: 1px solid var(--border);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: var(--surface-glass);
   color: var(--muted-foreground);
 }

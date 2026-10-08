@@ -15,13 +15,13 @@ export class EstatisticaRepository {
         WHERE ($1::uuid IS NULL OR id_campeonato = $1)
       `, [filtro]),
       pool.query(`
-        SELECT a.id_atleta, a.nome, c.nome AS clube, COUNT(*)::int AS total
+        SELECT a.id_atleta, a.nome, a.foto_perfil, c.nome AS clube, COUNT(*)::int AS total
         FROM eventos_sumula e
         JOIN partidas p ON p.id_partida = e.id_partida
         JOIN atletas a ON a.id_atleta = e.id_atleta
         LEFT JOIN clubes c ON c.id_clube = a.id_clube
         WHERE e.tipo_evento = 'GOL' AND ($1::uuid IS NULL OR p.id_campeonato = $1)
-        GROUP BY a.id_atleta, a.nome, c.nome
+        GROUP BY a.id_atleta, a.nome, a.foto_perfil, c.nome
         ORDER BY total DESC, a.nome ASC
         LIMIT 10
       `, [filtro]),

@@ -1,0 +1,2 @@
+ALTER TABLE atletas
+ADD COLUMN IF NOT EXISTS foto_perfil TEXT;
