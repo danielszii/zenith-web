@@ -50,44 +50,47 @@ const mobileController = new MobileController(new MobileService(new MobileReposi
 const estatisticaController = new EstatisticaController(new EstatisticaService(new EstatisticaRepository()));
 
 // ROTAS DE AUTENTICAÇÃO (PÚBLICAS)
-routes.post('/auth/registrar', validationMiddleware(CreateUsuarioDTO), (req, res, next) => authController.registrar(req, res, next));
+routes.post('/auth/registrar', authMiddleware, roleMiddleware(['admin']), validationMiddleware(CreateUsuarioDTO), (req, res, next) => authController.registrar(req, res, next));
 routes.post('/auth/login', (req, res, next) => authController.login(req, res, next));
 
 // ROTAS DE CLUBES
-routes.post('/clubes', validationMiddleware(CreateClubeDTO), (req, res, next) => clubeController.store(req, res, next));
+routes.post('/clubes', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateClubeDTO), (req, res, next) => clubeController.store(req, res, next));
 routes.get('/clubes', (req, res, next) => clubeController.index(req, res, next));
-routes.put('/clubes/:id', (req, res, next) => clubeController.update(req, res, next));
-routes.delete('/clubes/:id', (req, res, next) => clubeController.delete(req, res, next));
+routes.put('/clubes/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateClubeDTO, { partial: true }), (req, res, next) => clubeController.update(req, res, next));
+routes.delete('/clubes/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => clubeController.delete(req, res, next));
 routes.get('/clubes/:id', (req, res, next) => clubeController.show(req, res, next));
 
 // ROTAS DE CAMPEONATOS
 // Protegida: Apenas Administradores podem criar campeonatos (API-02)
-routes.post('/campeonatos', authMiddleware, roleMiddleware(['admin']), validationMiddleware(CreateCampeonatoDTO), (req, res, next) => campeonatoController.store(req, res, next));
+routes.post('/campeonatos', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateCampeonatoDTO), (req, res, next) => campeonatoController.store(req, res, next));
 routes.get('/campeonatos', (req, res, next) => campeonatoController.index(req, res, next));
-routes.put('/campeonatos/:id', (req, res, next) => campeonatoController.update(req, res, next));
-routes.delete('/campeonatos/:id', (req, res, next) => campeonatoController.delete(req, res, next));
+routes.put('/campeonatos/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateCampeonatoDTO, { partial: true }), (req, res, next) => campeonatoController.update(req, res, next));
+routes.delete('/campeonatos/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => campeonatoController.delete(req, res, next));
 routes.get('/campeonatos/:id', (req, res, next) => campeonatoController.show(req, res, next));
-routes.post('/campeonatos/inscricoes', (req, res, next) => campeonatoController.inscreverClube(req, res, next));
+routes.post('/campeonatos/inscricoes', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => campeonatoController.inscreverClube(req, res, next));
 routes.get('/campeonatos/:id/tabela', (req, res, next) => campeonatoController.showTabela(req, res, next));
 
 // CENTRAL PÚBLICA DO PORTAL
 routes.get('/public/estatisticas', (req, res, next) => estatisticaController.index(req, res, next));
+routes.get('/public/atletas', (req, res, next) => atletaController.publicIndex(req, res, next));
+routes.get('/public/atletas/:id', (req, res, next) => atletaController.publicShow(req, res, next));
+routes.get('/public/atletas/:id/estatisticas', (req, res, next) => atletaController.obterEstatisticas(req, res, next));
 
 // ROTAS DE ATLETAS
-routes.post('/atletas', validationMiddleware(CreateAtletaDTO), (req, res, next) => atletaController.store(req, res, next));
-routes.get('/atletas', (req, res, next) => atletaController.index(req, res, next));
-routes.put('/atletas/:id', (req, res, next) => atletaController.update(req, res, next));
-routes.delete('/atletas/:id', (req, res, next) => atletaController.delete(req, res, next));
-routes.get('/atletas/:id', (req, res, next) => atletaController.show(req, res, next));
-routes.get('/atletas/:id/estatisticas', (req, res, next) => atletaController.obterEstatisticas(req, res, next));
+routes.post('/atletas', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateAtletaDTO), (req, res, next) => atletaController.store(req, res, next));
+routes.get('/atletas', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => atletaController.index(req, res, next));
+routes.put('/atletas/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreateAtletaDTO, { partial: true }), (req, res, next) => atletaController.update(req, res, next));
+routes.delete('/atletas/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => atletaController.delete(req, res, next));
+routes.get('/atletas/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => atletaController.show(req, res, next));
+routes.get('/atletas/:id/estatisticas', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => atletaController.obterEstatisticas(req, res, next));
 
 // ROTAS DE PARTIDAS
-routes.post('/partidas', validationMiddleware(CreatePartidaDTO), (req, res, next) => partidaController.store(req, res, next));
+routes.post('/partidas', authMiddleware, roleMiddleware(['admin', 'gestor']), validationMiddleware(CreatePartidaDTO), (req, res, next) => partidaController.store(req, res, next));
 routes.get('/partidas', (req, res, next) => partidaController.index(req, res, next));
 routes.get('/partidas/:id', (req, res, next) => partidaController.show(req, res, next));
-routes.patch('/partidas/:id/status', (req, res, next) => partidaController.updateStatus(req, res, next));
-routes.post('/partidas/:id/validar-elenco', (req, res, next) => partidaController.validarElenco(req, res, next));
-routes.delete('/partidas/:id', (req, res, next) => partidaController.delete(req, res, next));
+routes.patch('/partidas/:id/status', authMiddleware, roleMiddleware(['admin', 'gestor', 'mesario']), (req, res, next) => partidaController.updateStatus(req, res, next));
+routes.post('/partidas/:id/validar-elenco', authMiddleware, roleMiddleware(['admin', 'mesario']), (req, res, next) => partidaController.validarElenco(req, res, next));
+routes.delete('/partidas/:id', authMiddleware, roleMiddleware(['admin', 'gestor']), (req, res, next) => partidaController.delete(req, res, next));
 
 // ROTAS DA SÚMULA E EVENTOS
 routes.post('/eventos', authMiddleware, roleMiddleware(['admin', 'mesario']), validationMiddleware(CreateEventoSumulaDTO), (req, res, next) => eventoController.store(req, res, next));

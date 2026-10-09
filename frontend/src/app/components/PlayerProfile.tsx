@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
-import { ArrowLeft, CalendarDays, Droplets, Ruler, Shield, UserRound, Weight } from 'lucide-react';
+import { ArrowLeft, CalendarDays, Ruler, Shield, UserRound, Weight } from 'lucide-react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../services/api';
-import type { Athlete, AthleteStats, Club } from '../types/api';
+import type { AthleteStats, Club, PublicAthlete } from '../types/api';
+import defaultPlayerPhoto from '../../assets/player-default.png';
 
-type ProfileData = { athlete: Athlete; stats: AthleteStats; club?: Club; teammates: Athlete[] };
+type ProfileData = { athlete: PublicAthlete; stats: AthleteStats; club?: Club; teammates: PublicAthlete[] };
 
 export function PlayerProfile() {
   const { id } = useParams();
@@ -16,10 +17,10 @@ export function PlayerProfile() {
     if (!id) return;
     setLoading(true);
     Promise.all([
-      api.get<Athlete>(`/atletas/${id}`),
-      api.get<AthleteStats>(`/atletas/${id}/estatisticas`),
+      api.get<PublicAthlete>(`/public/atletas/${id}`),
+      api.get<AthleteStats>(`/public/atletas/${id}/estatisticas`),
       api.get<Club[]>('/clubes'),
-      api.get<Athlete[]>('/atletas'),
+      api.get<PublicAthlete[]>('/public/atletas'),
     ]).then(([athleteResponse, statsResponse, clubsResponse, athletesResponse]) => {
       const athlete = athleteResponse.data;
       setProfile({
@@ -44,7 +45,7 @@ export function PlayerProfile() {
       <section className="mt-6 border-y border-[var(--border)] bg-[var(--card)]">
         <div className="app-shell grid min-h-72 md:grid-cols-[220px_1fr_auto]">
           <div className="relative grid min-h-52 place-items-center overflow-hidden border-b border-[var(--border)] bg-[var(--primary)] text-[var(--primary-foreground)] md:border-b-0 md:border-r">
-            {athlete.foto_perfil ? <img src={athlete.foto_perfil} alt={athlete.nome} className="absolute inset-0 h-full w-full object-contain object-bottom" /> : <UserRound className="h-20 w-20" strokeWidth={1.25} />}
+            <img src={athlete.foto_perfil || defaultPlayerPhoto} alt={athlete.nome} onError={(e) => { e.currentTarget.src = defaultPlayerPhoto; }} className="absolute inset-0 h-full w-full object-contain object-bottom" />
           </div>
           <div className="flex flex-col justify-center px-6 py-9 md:px-10">
             <p className="eyebrow">Perfil oficial</p>
@@ -77,7 +78,7 @@ export function PlayerProfile() {
             <Info icon={<CalendarDays />} label="Nascimento" value={formatDate(athlete.data_nasc)} />
             <Info icon={<Ruler />} label="Altura" value={athlete.altura ? `${athlete.altura} m` : 'Não informada'} />
             <Info icon={<Weight />} label="Peso" value={athlete.peso ? `${athlete.peso} kg` : 'Não informado'} />
-            <Info icon={<Droplets />} label="Tipo sanguíneo" value={athlete.tipo_sanguineo || 'Não informado'} />
+            <Info icon={<Shield />} label="Situação" value={athlete.status || 'Não informada'} />
           </div>
 
           <div className="mt-8 border border-[var(--border)] bg-[var(--card)]">
@@ -94,7 +95,9 @@ export function PlayerProfile() {
           <div className="border border-[var(--border)] bg-[var(--card)]">
             {teammates.length ? teammates.map(teammate => (
               <Link key={teammate.id_atleta} to={`/atletas/${teammate.id_atleta}`} className="group grid grid-cols-[2.5rem_1fr_auto] items-center gap-3 border-b border-[var(--border)] p-4 last:border-0 hover:bg-[var(--surface-glass-hover)]">
-                <span className="grid h-10 w-10 place-items-center bg-[var(--muted)]"><UserRound className="h-4 w-4 text-[var(--muted-foreground)]" /></span>
+                <span className="grid h-10 w-10 place-items-center overflow-hidden bg-[var(--muted)]">
+                  <img src={teammate.foto_perfil || defaultPlayerPhoto} alt={teammate.nome} onError={(e) => { e.currentTarget.src = defaultPlayerPhoto; }} className="h-full w-full object-cover" />
+                </span>
                 <span className="min-w-0 truncate text-sm font-bold">{teammate.nome}</span>
                 <ArrowLeft className="h-4 w-4 rotate-180 text-[var(--primary)] transition-transform group-hover:translate-x-1" />
               </Link>

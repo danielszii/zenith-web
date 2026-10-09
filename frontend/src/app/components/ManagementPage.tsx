@@ -1,7 +1,10 @@
 import { FormEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import {
+  ArrowRight,
   CalendarDays,
+  LockKeyhole,
   LogOut,
+  Mail,
   Medal,
   ShieldCheck,
   Trophy,
@@ -94,12 +97,12 @@ export function ManagementPage() {
   const [championships, setChampionships] = useState<Championship[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
 
-  const reload = useCallback(async () => {
+  const reload = useCallback(async (role?: UserRole) => {
     setBusy(true);
     try {
       const data = await Promise.all([
         zenithApi.clubs.list(),
-        zenithApi.athletes.list(),
+        role === "mesario" ? Promise.resolve([]) : zenithApi.athletes.list(),
         zenithApi.championships.list(),
         zenithApi.matches.list(),
       ]);
@@ -114,14 +117,15 @@ export function ManagementPage() {
     }
   }, []);
   useEffect(() => {
-    void reload();
-  }, [reload]);
+    if (user) void reload(user.role);
+    else setTab('account');
+  }, [reload, user]);
   const run: Run = async (action, success, shouldReload = true) => {
     setBusy(true);
     setNotice(null);
     try {
       await action();
-      if (shouldReload) await reload();
+      if (shouldReload) await reload(user?.role);
       setNotice({ text: success });
       return true;
     } catch (error) {
@@ -138,6 +142,14 @@ export function ManagementPage() {
     ["championships", "Campeonatos", Trophy],
     ["matches", "Partidas", CalendarDays],
   ] as const;
+  const visibleTabs = user?.role === "mesario"
+    ? tabs.filter(([id]) => id === "account" || id === "matches")
+    : tabs;
+
+  if (!user) {
+    return <LoginPage busy={busy} notice={notice} run={run} setUser={setUser} />;
+  }
+
   return (
     <main className="page-enter app-shell w-full flex-1 py-12">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
@@ -145,13 +157,13 @@ export function ManagementPage() {
           <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--primary)]">
             Portal Zenith
           </p>
-          <h1 className="font-display mt-2 text-6xl font-normal tracking-wide">GESTÃO DO PORTAL</h1>
+          <h1 className="font-display mt-2 text-6xl font-normal tracking-wide">PAINEL ZENITH</h1>
           <p className="mt-1 text-sm text-[var(--muted-foreground)]">
             Cadastros e informações públicas. A operação da súmula pertence ao
             aplicativo.
           </p>
         </div>
-        <button className={secondary} onClick={() => void reload()}>
+        <button className={secondary} onClick={() => void reload(user.role)}>
           {busy ? "Sincronizando…" : "Sincronizar dados"}
         </button>
       </div>
@@ -163,7 +175,7 @@ export function ManagementPage() {
         </div>
       )}
       <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-        {tabs.map(([id, label, Icon]) => (
+        {visibleTabs.map(([id, label, Icon]) => (
           <button
             key={id}
             onClick={() => setTab(id)}
@@ -203,29 +215,24 @@ export function ManagementPage() {
   );
 }
 
-function Account({
-  user,
-  setUser,
-  run,
+function LoginPage({
   busy,
+  notice,
+  run,
+  setUser,
 }: {
-  user: SessionUser | null;
-  setUser: (u: SessionUser | null) => void;
-  run: Run;
   busy: boolean;
+  notice: { error?: boolean; text: string } | null;
+  run: Run;
+  setUser: (user: SessionUser) => void;
 }) {
-  const [login, setLogin] = useState({ email: "", senha: "" });
-  const [register, setRegister] = useState({
-    nome: "",
-    email: "",
-    senha: "",
-    role: "gestor" as UserRole,
-  });
-  const signIn = async (e: FormEvent) => {
-    e.preventDefault();
+  const [credentials, setCredentials] = useState({ email: "", senha: "" });
+
+  const signIn = async (event: FormEvent) => {
+    event.preventDefault();
     await run(
       async () => {
-        const session = await zenithApi.login(login.email, login.senha);
+        const session = await zenithApi.login(credentials.email, credentials.senha);
         localStorage.setItem("@zenith:token", session.token);
         localStorage.setItem("@zenith:user", JSON.stringify(session.usuario));
         setUser(session.usuario);
@@ -234,6 +241,93 @@ function Account({
       false,
     );
   };
+
+  return (
+    <main className="page-enter flex min-h-[calc(100vh-72px)] flex-1 items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <div className="mb-8 text-center">
+          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)]">
+            <LockKeyhole className="h-6 w-6" />
+          </span>
+          <p className="eyebrow mt-6">Área Zenith</p>
+          <h1 className="font-display mt-3 text-5xl leading-none sm:text-6xl">ACESSE SUA CONTA</h1>
+          <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[var(--muted-foreground)]">
+            Entre para acessar o espaço da sua organização, competição ou equipe operacional.
+          </p>
+        </div>
+
+        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface-glass)] p-6 shadow-2xl shadow-black/20 sm:p-8">
+          {notice?.error && (
+            <div role="alert" className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
+              {notice.text}
+            </div>
+          )}
+
+          <form className="space-y-5" onSubmit={signIn}>
+            <label className="block">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">E-mail</span>
+              <span className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-4 focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[color:var(--primary)]/15">
+                <Mail className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+                <input
+                  className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none"
+                  type="email"
+                  autoComplete="email"
+                  required
+                  placeholder="voce@exemplo.com"
+                  value={credentials.email}
+                  onChange={(event) => setCredentials({ ...credentials, email: event.target.value })}
+                />
+              </span>
+            </label>
+
+            <label className="block">
+              <span className="mb-2 block text-xs font-bold uppercase tracking-wider text-[var(--muted-foreground)]">Senha</span>
+              <span className="flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-4 focus-within:border-[var(--primary)] focus-within:ring-2 focus-within:ring-[color:var(--primary)]/15">
+                <LockKeyhole className="h-4 w-4 shrink-0 text-[var(--muted-foreground)]" />
+                <input
+                  className="h-12 min-w-0 flex-1 bg-transparent text-sm outline-none"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  placeholder="Digite sua senha"
+                  value={credentials.senha}
+                  onChange={(event) => setCredentials({ ...credentials, senha: event.target.value })}
+                />
+              </span>
+            </label>
+
+            <button type="submit" className="button-primary min-h-12 w-full" disabled={busy}>
+              {busy ? "Entrando…" : "Entrar"}
+              {!busy && <ArrowRight className="h-4 w-4" />}
+            </button>
+          </form>
+        </section>
+
+        <p className="mt-5 text-center text-xs text-[var(--muted-foreground)]">
+          O acesso é fornecido pela organização responsável pela sua conta.
+        </p>
+      </div>
+    </main>
+  );
+}
+
+function Account({
+  user,
+  setUser,
+  run,
+  busy,
+}: {
+  user: SessionUser;
+  setUser: (u: SessionUser | null) => void;
+  run: Run;
+  busy: boolean;
+}) {
+  const [register, setRegister] = useState({
+    nome: "",
+    email: "",
+    senha: "",
+    role: "gestor" as UserRole,
+  });
   const logout = () => {
     localStorage.removeItem("@zenith:token");
     localStorage.removeItem("@zenith:user");
@@ -242,43 +336,19 @@ function Account({
   return (
     <div className="grid gap-6 lg:grid-cols-2">
       <section className={panel}>
-        <h2 className="mb-4 text-xl font-semibold">Sessão administrativa</h2>
-        {user ? (
-          <div className="space-y-3">
-            <p className="font-medium">{user.nome}</p>
-            <p className="text-sm text-[var(--muted-foreground)]">
-              {user.email} · {user.role}
-            </p>
-            <button className={danger} onClick={logout}>
-              <LogOut className="mr-2 inline h-4 w-4" />
-              Sair
-            </button>
-          </div>
-        ) : (
-          <form className="space-y-3" onSubmit={signIn}>
-            <input
-              className={field}
-              type="email"
-              required
-              placeholder="E-mail"
-              value={login.email}
-              onChange={(e) => setLogin({ ...login, email: e.target.value })}
-            />
-            <input
-              className={field}
-              type="password"
-              required
-              placeholder="Senha"
-              value={login.senha}
-              onChange={(e) => setLogin({ ...login, senha: e.target.value })}
-            />
-            <button className={primary} disabled={busy}>
-              Entrar
-            </button>
-          </form>
-        )}
+        <h2 className="mb-4 text-xl font-semibold">Sua conta</h2>
+        <div className="space-y-3">
+          <p className="font-medium">{user.nome}</p>
+          <p className="text-sm text-[var(--muted-foreground)]">
+            {user.email} · {user.role}
+          </p>
+          <button className={danger} onClick={logout}>
+            <LogOut className="mr-2 inline h-4 w-4" />
+            Sair
+          </button>
+        </div>
       </section>
-      <section className={panel}>
+      {user?.role === 'admin' && <section className={panel}>
         <h2 className="mb-4 text-xl font-semibold">
           Cadastrar usuário do portal
         </h2>
@@ -314,7 +384,7 @@ function Account({
             className={field}
             type="password"
             required
-            minLength={6}
+            minLength={8}
             placeholder="Senha"
             value={register.senha}
             onChange={(e) =>
@@ -336,7 +406,7 @@ function Account({
             Criar usuário
           </button>
         </form>
-      </section>
+      </section>}
     </div>
   );
 }
@@ -463,6 +533,7 @@ function Athletes({
   const [stats, setStats] = useState<AthleteStats | null>(null);
   const payload = {
     ...form,
+    foto_perfil: form.foto_perfil || undefined,
     peso: form.peso ? Number(form.peso) : undefined,
     altura: form.altura ? Number(form.altura) : undefined,
   };

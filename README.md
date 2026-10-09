@@ -1,6 +1,6 @@
 # Zenith OS
 
-Monorepositório da plataforma de gestão de campeonatos, com API Node.js/TypeScript, frontend React/Vite e PostgreSQL.
+Monorepositório da plataforma Zenith para gestão de competições esportivas. O projeto reúne a API Node.js/TypeScript, o portal React/Vite e a integração com o aplicativo offline.
 
 ## Requisitos
 
@@ -8,7 +8,7 @@ Monorepositório da plataforma de gestão de campeonatos, com API Node.js/TypeSc
 - npm 10 ou superior
 - PostgreSQL 14 ou superior
 
-## Preparação inicial
+## Configuração inicial
 
 1. Instale as dependências na raiz:
 
@@ -16,44 +16,48 @@ Monorepositório da plataforma de gestão de campeonatos, com API Node.js/TypeSc
    npm install
    ```
 
-2. Crie o banco `zenith_db` no PostgreSQL e execute `backend/database/schema.sql` nele.
-
-3. Copie os arquivos de ambiente:
+2. Crie o banco PostgreSQL e copie os arquivos de ambiente:
 
    ```powershell
    Copy-Item backend/.env.example backend/.env
    Copy-Item frontend/.env.example frontend/.env
    ```
 
-4. Ajuste `DB_PASSWORD` e `JWT_SECRET` em `backend/.env`.
+3. Preencha as credenciais do banco e o `JWT_SECRET` em `backend/.env`.
+
+4. Aplique as migrações:
+
+   ```powershell
+   npm run db:migrate -w backend
+   ```
 
 ## Desenvolvimento
 
-Inicie frontend e backend juntos:
+Inicie a API e o portal juntos:
 
 ```powershell
 npm run dev
 ```
 
-- Frontend: http://localhost:5173
+- Portal: http://localhost:5173
 - API: http://localhost:3000
 - Saúde da API: http://localhost:3000/health
-- Central operacional: http://localhost:5173/management
+- Central de gestão: http://localhost:5173/gestao
 
-Também é possível iniciar os serviços separadamente com `npm run dev:backend` e `npm run dev:frontend`.
+Para iniciar os serviços separadamente, use `npm run dev:backend` e `npm run dev:frontend`.
 
-## Central de gestão
+## Fluxo da plataforma
 
-A rota `/management` consome a API real e permite gerenciar usuários, clubes, atletas,
-campeonatos, inscrições, classificação e a agenda de partidas do portal.
-As operações de súmula, escalação e eventos de jogo ficam reservadas ao aplicativo offline.
-Para criar campeonatos no portal, use uma sessão `admin`.
+O portal publica clubes, atletas, competições, estatísticas e partidas. A rota `/gestao`, acessada diretamente pelo endereço, concentra as operações administrativas. Usuários administradores podem cadastrar contas; administradores e gestores mantêm os dados esportivos.
+
+O aplicativo recebe as partidas atribuídas, opera a súmula offline e sincroniza os eventos com a API. A API processa cada lote em uma transação e usa identificadores de operação para impedir duplicações durante tentativas de reenvio.
 
 ## Validação
 
 ```powershell
 npm run typecheck
 npm run build
+npm run test:mobile -w backend
 ```
 
-Variáveis reais e artefatos de build não são versionados. Use os arquivos `.env.example` como referência.
+Segredos e artefatos de build não são versionados. Use os arquivos `.env.example` como referência.

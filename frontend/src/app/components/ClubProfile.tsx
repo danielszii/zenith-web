@@ -1,270 +1,52 @@
-import { Trophy, Users, Calendar, MapPin, Star, TrendingUp, Award, Shield } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, CalendarDays, Search, Shield, UserRound } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import defaultPlayerPhoto from '../../assets/player-default.png';
+import { api } from '../services/api';
+import type { Club, Match, PublicAthlete } from '../types/api';
+
+type ClubData = { clubs: Club[]; athletes: PublicAthlete[]; matches: Match[] };
 
 export function ClubProfile() {
-  const clubStats = [
-    { label: 'Fundação', value: '1912', icon: Calendar },
-    { label: 'Estádio', value: 'Arena Principal', icon: MapPin },
-    { label: 'Capacidade', value: '45.000', icon: Users },
-    { label: 'Títulos', value: '24', icon: Trophy },
-  ];
+  const { id } = useParams();
+  const [data, setData] = useState<ClubData>({ clubs: [], athletes: [], matches: [] });
+  const [query, setQuery] = useState('');
+  const [loading, setLoading] = useState(true);
 
-  const squad = [
-    { id: '1', name: 'Gabriel Silva', position: 'Goleiro', number: '1', age: 28, nationality: '🇧🇷' },
-    { id: '2', name: 'Lucas Martins', position: 'Zagueiro', number: '3', age: 26, nationality: '🇧🇷' },
-    { id: '3', name: 'Pedro Costa', position: 'Zagueiro', number: '4', age: 24, nationality: '🇧🇷' },
-    { id: '4', name: 'Rafael Santos', position: 'Lateral', number: '2', age: 27, nationality: '🇧🇷' },
-    { id: '5', name: 'Felipe Rocha', position: 'Lateral', number: '6', age: 25, nationality: '🇧🇷' },
-    { id: '6', name: 'João Mendes', position: 'Volante', number: '5', age: 29, nationality: '🇧🇷' },
-    { id: '7', name: 'Matheus Lima', position: 'Meia', number: '8', age: 23, nationality: '🇧🇷' },
-    { id: '8', name: 'Daniel Oliveira', position: 'Atacante', number: '7', age: 26, nationality: '🇧🇷' },
-    { id: '9', name: 'André Ferreira', position: 'Atacante', number: '9', age: 28, nationality: '🇧🇷' },
-    { id: '10', name: 'Bruno Alves', position: 'Atacante', number: '11', age: 24, nationality: '🇧🇷' },
-  ];
+  useEffect(() => {
+    Promise.all([api.get<Club[]>('/clubes'), api.get<PublicAthlete[]>('/public/atletas'), api.get<Match[]>('/partidas')])
+      .then(([clubs, athletes, matches]) => setData({ clubs: clubs.data, athletes: athletes.data, matches: matches.data }))
+      .finally(() => setLoading(false));
+  }, []);
 
-  const upcomingMatches = [
-    { id: '1', opponent: 'Palmeiras', date: '15 Mai', time: '16:00', location: 'Casa', championship: 'Brasileirão' },
-    { id: '2', opponent: 'Flamengo', date: '18 Mai', time: '20:00', location: 'Fora', championship: 'Brasileirão' },
-    { id: '3', opponent: 'São Paulo', date: '22 Mai', time: '18:30', location: 'Casa', championship: 'Copa do Brasil' },
-  ];
+  const club = data.clubs.find(item => item.id_clube === id);
+  if (loading) return <main className="app-shell flex-1 py-16"><div className="h-72 animate-pulse bg-[var(--muted)]" /></main>;
+  if (!id) return <ClubDirectory clubs={data.clubs} query={query} setQuery={setQuery} />;
+  if (!club) return <main className="app-shell flex-1 py-24 text-center"><p className="font-display text-5xl">CLUBE NÃO ENCONTRADO</p><Link to="/clubes" className="button-secondary mt-6">Ver clubes</Link></main>;
 
-  const recentMatches = [
-    { id: '1', opponent: 'Corinthians', score: '2-1', result: 'V', date: '05 Mai', championship: 'Brasileirão' },
-    { id: '2', opponent: 'Santos', score: '1-1', result: 'E', date: '01 Mai', championship: 'Brasileirão' },
-    { id: '3', opponent: 'Atlético-MG', score: '0-2', result: 'D', date: '28 Abr', championship: 'Copa do Brasil' },
-    { id: '4', opponent: 'Grêmio', score: '3-0', result: 'V', date: '24 Abr', championship: 'Brasileirão' },
-  ];
+  const roster = data.athletes.filter(athlete => athlete.id_clube === club.id_clube);
+  const matches = data.matches.filter(match => match.id_mandante === club.id_clube || match.id_visitante === club.id_clube);
+  const finished = matches.filter(match => match.status === 'encerrado');
+  const goals = finished.reduce((total, match) => total + (match.id_mandante === club.id_clube ? match.gols_mandante : match.gols_visitante), 0);
 
-  const titles = [
-    { year: '2025', competition: 'Campeonato Brasileiro', icon: '🏆' },
-    { year: '2024', competition: 'Copa do Brasil', icon: '🏆' },
-    { year: '2023', competition: 'Campeonato Estadual', icon: '🏆' },
-    { year: '2022', competition: 'Supercopa', icon: '🏆' },
-  ];
-
-  const teamStats = [
-    { label: 'Partidas', value: '38', subtext: 'Temporada 2026' },
-    { label: 'Vitórias', value: '24', subtext: '63% aproveitamento' },
-    { label: 'Gols Marcados', value: '72', subtext: '1.89 por partida' },
-    { label: 'Gols Sofridos', value: '28', subtext: '0.74 por partida' },
-  ];
-
-  return (
-    <div className="min-h-screen bg-[var(--background)]">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-b from-[var(--muted)]/20 to-transparent border-b border-[var(--border)]">
-        <div className="max-w-7xl mx-auto px-8 py-12">
-          <div className="flex items-start gap-8">
-            {/* Club Logo */}
-            <div className="w-32 h-32 bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] flex items-center justify-center flex-shrink-0">
-              <Shield className="w-16 h-16 text-[var(--primary)]" />
-            </div>
-
-            {/* Club Info */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-3">
-                <h1 className="text-4xl font-semibold text-[var(--foreground)]">Cruzeiro FC</h1>
-                <div className="flex items-center gap-1 px-3 py-1.5 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-lg">
-                  <Star className="w-4 h-4 text-[var(--primary)]" />
-                  <span className="text-sm font-semibold text-[var(--primary)]">1º Colocado</span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-6 text-[var(--muted-foreground)] mb-6">
-                <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" />
-                  <span className="text-sm">São Paulo, Brasil</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm">Fundado em 1912</span>
-                </div>
-              </div>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-4 gap-4">
-                {clubStats.map((stat, index) => {
-                  const Icon = stat.icon;
-                  return (
-                    <div
-                      key={index}
-                      className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-xl border border-[var(--border)] p-4"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <Icon className="w-4 h-4 text-[var(--muted-foreground)]" />
-                        <span className="text-xs text-[var(--muted-foreground)] uppercase">
-                          {stat.label}
-                        </span>
-                      </div>
-                      <p className="text-2xl font-semibold text-[var(--foreground)]">{stat.value}</p>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column - Main Content */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Team Statistics */}
-            <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <TrendingUp className="w-5 h-5 text-[var(--primary)]" />
-                <h2 className="text-xl font-semibold text-[var(--foreground)]">Estatísticas do Time</h2>
-              </div>
-
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {teamStats.map((stat, index) => (
-                  <div key={index} className="text-center">
-                    <p className="text-3xl font-bold text-[var(--foreground)] mb-1">{stat.value}</p>
-                    <p className="text-sm font-medium text-[var(--foreground)] mb-1">{stat.label}</p>
-                    <p className="text-xs text-[var(--muted-foreground)]">{stat.subtext}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Squad List */}
-            <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Users className="w-5 h-5 text-[var(--primary)]" />
-                <h2 className="text-xl font-semibold text-[var(--foreground)]">Elenco Atual</h2>
-              </div>
-
-              <div className="space-y-2">
-                {squad.map((player) => (
-                  <div
-                    key={player.id}
-                    className="flex items-center justify-between p-4 bg-[var(--muted)]/20 hover:bg-[var(--muted)]/30 rounded-xl border border-transparent hover:border-[var(--border)] transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 bg-[var(--primary)]/10 border border-[var(--primary)]/30 rounded-lg flex items-center justify-center">
-                        <span className="text-sm font-bold text-[var(--primary)]">
-                          {player.number}
-                        </span>
-                      </div>
-                      <div>
-                        <p className="font-semibold text-[var(--foreground)]">{player.name}</p>
-                        <p className="text-xs text-[var(--muted-foreground)]">{player.position}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">{player.nationality}</span>
-                      <span className="text-sm text-[var(--muted-foreground)]">{player.age} anos</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Titles */}
-            <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Award className="w-5 h-5 text-[var(--primary)]" />
-                <h2 className="text-xl font-semibold text-[var(--foreground)]">Títulos Recentes</h2>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {titles.map((title, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center gap-3 p-4 bg-[var(--muted)]/20 rounded-xl border border-[var(--border)]"
-                  >
-                    <span className="text-3xl">{title.icon}</span>
-                    <div>
-                      <p className="font-semibold text-[var(--foreground)]">{title.competition}</p>
-                      <p className="text-xs text-[var(--muted-foreground)]">{title.year}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Right Column - Sidebar */}
-          <div className="space-y-8">
-            {/* Upcoming Matches */}
-            <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Calendar className="w-5 h-5 text-[var(--primary)]" />
-                <h3 className="text-lg font-semibold text-[var(--foreground)]">Próximas Partidas</h3>
-              </div>
-
-              <div className="space-y-3">
-                {upcomingMatches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="p-4 bg-[var(--muted)]/20 rounded-xl border border-[var(--border)] hover:bg-[var(--muted)]/30 transition-all cursor-pointer"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs font-semibold text-[var(--muted-foreground)] uppercase">
-                        {match.championship}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded ${
-                          match.location === 'Casa'
-                            ? 'bg-[var(--success)]/10 text-[var(--success)]'
-                            : 'bg-[var(--muted)] text-[var(--muted-foreground)]'
-                        }`}
-                      >
-                        {match.location}
-                      </span>
-                    </div>
-                    <p className="font-semibold text-[var(--foreground)] mb-2">vs {match.opponent}</p>
-                    <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-                      <Calendar className="w-3 h-3" />
-                      <span>
-                        {match.date} • {match.time}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Recent Results */}
-            <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6">
-              <div className="flex items-center gap-2 mb-6">
-                <Trophy className="w-5 h-5 text-[var(--primary)]" />
-                <h3 className="text-lg font-semibold text-[var(--foreground)]">Resultados Recentes</h3>
-              </div>
-
-              <div className="space-y-3">
-                {recentMatches.map((match) => (
-                  <div
-                    key={match.id}
-                    className="p-4 bg-[var(--muted)]/20 rounded-xl border border-[var(--border)]"
-                  >
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-xs text-[var(--muted-foreground)]">{match.date}</span>
-                      <div
-                        className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                          match.result === 'V'
-                            ? 'bg-[var(--success)]/10 text-[var(--success)]'
-                            : match.result === 'E'
-                            ? 'bg-[var(--muted)] text-[var(--muted-foreground)]'
-                            : 'bg-[var(--destructive)]/10 text-[var(--destructive)]'
-                        }`}
-                      >
-                        {match.result}
-                      </div>
-                    </div>
-                    <p className="font-semibold text-[var(--foreground)] mb-1">vs {match.opponent}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm font-bold text-[var(--foreground)]">{match.score}</span>
-                      <span className="text-xs text-[var(--muted-foreground)]">{match.championship}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  return <main className="page-enter flex-1 pb-16">
+    <section className="app-shell pt-8"><Link to="/clubes" className="button-quiet"><ArrowLeft className="h-4 w-4" /> Todos os clubes</Link></section>
+    <section className="mt-6 border-y border-[var(--border)] bg-[var(--card)]"><div className="app-shell grid min-h-64 md:grid-cols-[220px_1fr]"><div className="grid min-h-52 place-items-center border-b border-[var(--border)] bg-[var(--primary)] p-8 md:border-b-0 md:border-r">{club.brasao ? <img src={club.brasao} alt={`Escudo ${club.nome}`} className="h-36 w-36 object-contain" /> : <Shield className="h-24 w-24 text-[var(--primary-foreground)]" strokeWidth={1.2} />}</div><div className="flex flex-col justify-center px-6 py-9 md:px-10"><p className="eyebrow">Perfil oficial do clube</p><h1 className="font-display mt-3 text-5xl leading-none md:text-7xl">{club.nome}</h1><p className="mt-4 text-sm text-[var(--muted-foreground)]">{club.responsavel || 'Responsável não informado'}{club.cores_oficiais ? ` · ${club.cores_oficiais}` : ''}</p></div></div></section>
+    <section className="app-shell mt-10 grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] sm:grid-cols-3"><Metric value={roster.length} label="Atletas" /><Metric value={finished.length} label="Partidas finalizadas" /><Metric value={goals} label="Gols marcados" accent /></section>
+    <section className="app-shell mt-12 grid gap-10 lg:grid-cols-[1.2fr_.8fr]">
+      <div><SectionHeader eyebrow="Elenco atual" title="ATLETAS" />{roster.length ? <div className="grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2">{roster.map(athlete => <Link key={athlete.id_atleta} to={`/atletas/${athlete.id_atleta}`} className="group grid grid-cols-[3rem_1fr_auto] items-center gap-3 bg-[var(--card)] p-4 hover:bg-[var(--surface-glass-hover)]"><img src={athlete.foto_perfil || defaultPlayerPhoto} alt={athlete.nome} className="h-12 w-12 bg-[var(--muted)] object-cover" /><span className="min-w-0"><strong className="block truncate text-sm">{athlete.nome}</strong><span className="text-xs capitalize text-[var(--muted-foreground)]">{athlete.status}</span></span><UserRound className="h-4 w-4 text-[var(--primary)]" /></Link>)}</div> : <Empty text="Nenhum atleta cadastrado neste clube." />}</div>
+      <aside><SectionHeader eyebrow="Agenda" title="PARTIDAS" />{matches.length ? <div className="border border-[var(--border)] bg-[var(--card)]">{matches.slice(0, 6).map(match => <Link key={match.id_partida} to={`/partidas/${match.id_partida}`} className="block border-b border-[var(--border)] p-4 last:border-0 hover:bg-[var(--surface-glass-hover)]"><span className="text-[.6rem] font-black uppercase tracking-wider text-[var(--primary)]">{match.campeonato?.nome || 'Competição'}</span><strong className="mt-1 block text-sm">{match.mandante?.nome} × {match.visitante?.nome}</strong><span className="mt-1 flex items-center gap-1.5 text-xs text-[var(--muted-foreground)]"><CalendarDays className="h-3.5 w-3.5" /> {formatDate(match.data)} · {match.hora.slice(0, 5)}</span></Link>)}</div> : <Empty text="Nenhuma partida encontrada para este clube." />}</aside>
+    </section>
+  </main>;
 }
+
+function ClubDirectory({ clubs, query, setQuery }: { clubs: Club[]; query: string; setQuery: (value: string) => void }) {
+  const filtered = useMemo(() => clubs.filter(club => normalize(club.nome).includes(normalize(query))), [clubs, query]);
+  return <main className="page-enter flex-1 pb-16"><section className="app-shell pb-10 pt-14 lg:pt-20"><p className="eyebrow">Participantes oficiais</p><h1 className="font-display mt-3 text-6xl md:text-8xl">CLUBES</h1><p className="mt-4 max-w-xl text-sm text-[var(--muted-foreground)]">Conheça os clubes e seus elencos nas competições Zenith.</p></section><section className="app-shell mb-7"><div className="flex items-center gap-3 border border-[var(--border)] bg-[var(--input-background)] px-4"><Search className="h-4 w-4 text-[var(--muted-foreground)]" /><input value={query} onChange={event => setQuery(event.target.value)} placeholder="Buscar clube" className="h-12 w-full bg-transparent text-sm outline-none" /></div></section><section className="app-shell">{filtered.length ? <div className="grid gap-px overflow-hidden border border-[var(--border)] bg-[var(--border)] sm:grid-cols-2 lg:grid-cols-3">{filtered.map(club => <Link key={club.id_clube} to={`/clubes/${club.id_clube}`} className="group flex min-h-56 flex-col bg-[var(--card)] p-6 hover:bg-[var(--surface-glass-hover)]"><span className="grid h-20 w-20 place-items-center bg-[var(--muted)]">{club.brasao ? <img src={club.brasao} alt="" className="h-16 w-16 object-contain" /> : <Shield className="h-8 w-8 text-[var(--muted-foreground)]" />}</span><div className="mt-auto pt-8"><p className="eyebrow">Clube</p><h2 className="mt-2 text-xl font-black">{club.nome}</h2></div></Link>)}</div> : <Empty text="Nenhum clube encontrado." />}</section></main>;
+}
+
+function SectionHeader({ eyebrow, title }: { eyebrow: string; title: string }) { return <div className="section-rule mb-5"><p className="eyebrow">{eyebrow}</p><h2 className="font-display mt-2 text-4xl">{title}</h2></div>; }
+function Metric({ value, label, accent }: { value: number; label: string; accent?: boolean }) { return <div className="bg-[var(--card)] p-6"><strong className={`font-display block text-5xl ${accent ? 'text-[var(--primary)]' : ''}`}>{value}</strong><span className="text-[.62rem] font-black uppercase tracking-wider text-[var(--muted-foreground)]">{label}</span></div>; }
+function Empty({ text }: { text: string }) { return <div className="border border-dashed border-[var(--border)] p-10 text-center text-sm text-[var(--muted-foreground)]">{text}</div>; }
+function normalize(value: string) { return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase(); }
+function formatDate(value: string) { return String(value).slice(0, 10).split('-').reverse().join('/'); }

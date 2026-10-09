@@ -1,5 +1,6 @@
 import { pool } from "../config/database.js";
 import { propsAtleta } from "../models/Atleta.js";
+import type { CreateAtletaDTO } from '../dtos/CreateAtletaDTO.js';
 
 export class AtletaRepository {
   async create(atleta: propsAtleta): Promise<propsAtleta> {
@@ -37,31 +38,37 @@ export class AtletaRepository {
     return rows[0];
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: Partial<CreateAtletaDTO>): Promise<propsAtleta | null> {
     const query = `
     UPDATE atletas 
-    SET nome = $1, cpf = $2, data_nasc = $3, status = $4, peso = $5, altura = $6, tipo_sanguineo = $7, foto_perfil = $8
-    WHERE id_atleta = $9 RETURNING *;
+    SET nome = COALESCE($1, nome), cpf = COALESCE($2, cpf), rg = COALESCE($3, rg),
+        data_nasc = COALESCE($4, data_nasc), status = COALESCE($5, status),
+        peso = COALESCE($6, peso), altura = COALESCE($7, altura),
+        tipo_sanguineo = COALESCE($8, tipo_sanguineo), foto_perfil = COALESCE($9, foto_perfil),
+        id_clube = COALESCE($10, id_clube)
+    WHERE id_atleta = $11 RETURNING *;
   `;
     const values = [
       data.nome,
       data.cpf,
+      data.rg,
       data.data_nasc,
-      data.status || "ativo",
-      data.peso || null,
-      data.altura || null,
+      data.status,
+      data.peso,
+      data.altura,
       data.tipo_sanguineo,
-      data.foto_perfil || null,
+      data.foto_perfil,
+      data.id_clube,
       id,
     ];
     const { rows } = await pool.query(query, values);
-    return rows[0];
+    return rows[0] ?? null;
   }
 
   async delete(id: string): Promise<boolean> {
     const query = "DELETE FROM atletas WHERE id_atleta = $1;";
-    await pool.query(query, [id]);
-    return true;
+    const result = await pool.query(query, [id]);
+    return Boolean(result.rowCount);
   }
 
   async obterPerfilEstatisticas(id_atleta: string) {

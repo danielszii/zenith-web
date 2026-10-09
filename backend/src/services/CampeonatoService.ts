@@ -28,11 +28,14 @@ export class CampeonatoService {
   }
 
   async atualizarCampeonato(id: string, dados: Partial<CreateCampeonatoDTO>) {
-    return await this.campeonatoRepository.update(id, dados);
+    const campeonato = await this.campeonatoRepository.update(id, dados);
+    if (!campeonato) throw new NotFoundError('Campeonato não encontrado.');
+    return campeonato;
   }
 
   async deletarCampeonato(id: string) {
-    return await this.campeonatoRepository.delete(id);
+    const deleted = await this.campeonatoRepository.delete(id);
+    if (!deleted) throw new NotFoundError('Campeonato não encontrado.');
   }
 
   async buscarPorId(id: string) {

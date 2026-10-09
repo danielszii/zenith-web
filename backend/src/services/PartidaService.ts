@@ -35,7 +35,8 @@ export class PartidaService {
   }
 
   async deletarPartida(id: string) {
-    return await this.PartidaRepository.delete(id);
+    const deleted = await this.PartidaRepository.delete(id);
+    if (!deleted) throw new NotFoundError('Partida não encontrada.');
   }
 
   async buscarPorId(id: string) {

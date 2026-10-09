@@ -15,7 +15,7 @@ function figmaAssetResolver() {
     resolveId(id: string) {
       if (id.startsWith('figma:asset/')) {
         const filename = id.replace('figma:asset/', '');
-        return path.resolve(__dirname, 'src/assets', filename);
+        return path.resolve(dirname, 'src/assets', filename);
       }
     }
   };
@@ -33,6 +33,11 @@ export default defineConfig({
   },
   // File types to support raw imports. Never add .css, .tsx, or .ts files to this.
   assetsInclude: ['**/*.svg', '**/*.csv'],
+  server: {
+    fs: {
+      allow: [path.resolve(dirname, '..')],
+    },
+  },
   test: {
     projects: [{
       extends: true,

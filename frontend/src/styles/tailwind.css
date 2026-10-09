@@ -1,6 +1,6 @@
 @import "tailwindcss";
-@import "./theme.css";
 @import "./fonts.css";
+@import "./theme.css";
 
 @layer utilities {
   /* Oculta a barra de rolagem no Chrome, Safari e Opera */

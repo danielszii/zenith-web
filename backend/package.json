@@ -9,6 +9,7 @@
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc --noEmit",
     "db:migrate": "tsx src/scripts/migrate.ts",
+    "db:photos": "tsx src/scripts/updatePhotos.ts",
     "test:mobile": "tsx src/scripts/smokeMobile.ts"
   },
   "keywords": [],

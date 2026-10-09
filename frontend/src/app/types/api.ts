@@ -38,6 +38,8 @@ export interface Athlete {
   id_clube: string;
 }
 
+export type PublicAthlete = Omit<Athlete, 'cpf' | 'rg' | 'tipo_sanguineo'>;
+
 export interface Championship {
   id_campeonato: string;
   nome: string;

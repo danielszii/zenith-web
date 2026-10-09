@@ -1,5 +1,6 @@
 import { pool } from "../config/database.js";
 import { propsClube } from "../models/Clube.js";
+import type { CreateClubeDTO } from '../dtos/CreateClubeDTO.js';
 
 export class ClubeRepository {
   async create(clube: propsClube): Promise<propsClube> {
@@ -33,23 +34,23 @@ export class ClubeRepository {
     return rows.length ? rows[0] : null;
   }
 
-  async update(id: string, data: any) {
-    const query = `UPDATE clubes SET nome = $1, brasao = $2, cores_oficiais = $3, responsavel = $4, cnpj = $5 WHERE id_clube = $6 RETURNING *;`;
+  async update(id: string, data: Partial<CreateClubeDTO>): Promise<propsClube | null> {
+    const query = `UPDATE clubes SET nome = COALESCE($1, nome), brasao = COALESCE($2, brasao), cores_oficiais = COALESCE($3, cores_oficiais), responsavel = COALESCE($4, responsavel), cnpj = COALESCE($5, cnpj) WHERE id_clube = $6 RETURNING *;`;
     const values = [
       data.nome,
-      data.brasao || null,
-      data.cores_oficiais || null,
-      data.responsavel || null,
-      data.cnpj || null,
+      data.brasao,
+      data.cores_oficiais,
+      data.responsavel,
+      data.cnpj,
       id,
     ];
     const { rows } = await pool.query(query, values);
-    return rows[0];
+    return rows[0] ?? null;
   }
 
   async delete(id: string): Promise<boolean> {
     const query = "DELETE FROM clubes WHERE id_clube = $1;";
-    await pool.query(query, [id]);
-    return true;
+    const result = await pool.query(query, [id]);
+    return Boolean(result.rowCount);
   }
 }

@@ -1,11 +1,21 @@
-import { readFile } from 'node:fs/promises';
+import { readdir, readFile } from 'node:fs/promises';
+import { extname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { pool } from '../config/database.js';
 
-const migration = fileURLToPath(new URL('../../database/migrations/002_mobile_offline.sql', import.meta.url));
+const migrationsDirectory = fileURLToPath(new URL('../../database/migrations/', import.meta.url));
+
 try {
-  await pool.query(await readFile(migration, 'utf8'));
-  console.log('Migration mobile offline aplicada com sucesso.');
+  const files = (await readdir(migrationsDirectory))
+    .filter(file => extname(file) === '.sql')
+    .sort((first, second) => first.localeCompare(second));
+
+  for (const file of files) {
+    await pool.query(await readFile(join(migrationsDirectory, file), 'utf8'));
+    console.log(`Migração aplicada: ${file}`);
+  }
+
+  console.log(`${files.length} migração(ões) aplicada(s) com sucesso.`);
 } finally {
   await pool.end();
 }

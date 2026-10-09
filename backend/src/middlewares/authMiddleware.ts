@@ -1,13 +1,11 @@
-import { Request, Response, NextFunction } from "express";
-import jwt from "jsonwebtoken";
-import { BusinessRuleError } from "../errors/BusinessRuleError.js";
-import { env } from "../config/env.js";
-
-const JWT_SECRET = env.jwtSecret;
+import type { NextFunction, Request, Response } from 'express';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+import { UnauthorizedError } from '../errors/UnauthorizedError.js';
 
 interface TokenPayload {
   id: string;
-  role: "admin" | "mesario" | "gestor";
+  role: 'admin' | 'mesario' | 'gestor';
 }
 
 declare global {
@@ -18,26 +16,21 @@ declare global {
   }
 }
 
-export const authMiddleware = (
-  req: Request,
-  res: Response,
-  next: NextFunction,
-) => {
+export const authMiddleware = (req: Request, _res: Response, next: NextFunction) => {
   const authHeader = req.headers.authorization;
-
-  // 2. Extrai o token de forma direta dividindo a string pelo espaço
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    throw new BusinessRuleError("Token de autenticação não fornecido ou malformado.");
+  if (!authHeader?.startsWith('Bearer ')) {
+    throw new UnauthorizedError('Token de autenticação não fornecido ou malformado.');
   }
 
-  const [, token] = authHeader.split(" ");
+  const token = authHeader.slice('Bearer '.length).trim();
+  if (!token) throw new UnauthorizedError('Token de autenticação não fornecido.');
 
   try {
-    const decoded = jwt.verify(token, JWT_SECRET) as TokenPayload;
+    const decoded = jwt.verify(token, env.jwtSecret) as TokenPayload;
+    if (!decoded.id || !decoded.role) throw new Error('Payload inválido');
     req.usuarioLogado = { id: decoded.id, role: decoded.role };
-    
-    return next();
+    next();
   } catch {
-    throw new BusinessRuleError("Token de autenticação inválido ou expirado.");
+    throw new UnauthorizedError('Token de autenticação inválido ou expirado.');
   }
 };

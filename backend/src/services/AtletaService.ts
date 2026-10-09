@@ -27,11 +27,14 @@ export class AtletaService {
   }
 
   async atualizarAtleta(id: string, dados: Partial<CreateAtletaDTO>) {
-    return await this.AtletaRepository.update(id, dados);
+    const atleta = await this.AtletaRepository.update(id, dados);
+    if (!atleta) throw new NotFoundError('Atleta não encontrado.');
+    return atleta;
   }
 
   async deletarAtleta(id: string) {
-    return await this.AtletaRepository.delete(id);
+    const deleted = await this.AtletaRepository.delete(id);
+    if (!deleted) throw new NotFoundError('Atleta não encontrado.');
   }
 
   async buscarPorId(id: string) {

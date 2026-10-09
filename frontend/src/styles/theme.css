@@ -1,6 +1,8 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
+  --font-family-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-family-display: 'Bebas Neue', Impact, sans-serif;
   --font-size: 16px;
   --font-weight-normal: 400;
   --font-weight-medium: 600;
@@ -43,31 +45,9 @@
   --chart-5: #e375d6;
 }
 
-:root.light {
-  --background: #f3f6f2;
-  --foreground: #101512;
-  --card: #ffffff;
-  --card-foreground: #101512;
-  --popover: #ffffff;
-  --popover-foreground: #101512;
-  --primary: #305d0c;
-  --primary-foreground: #fff;
-  --secondary: #dfe7dd;
-  --secondary-foreground: #101512;
-  --muted: #e8ede6;
-  --muted-foreground: #647068;
-  --accent: #16633c;
-  --accent-foreground: #fff;
-  --border: rgba(18, 38, 25, .13);
-  --input: #fff;
-  --input-background: #fff;
-  --switch-background: #d8e0d6;
-  --ring: #305d0c;
-  --surface-glass: rgba(255,255,255,.86);
-  --surface-glass-hover: #f8faf7;
-}
-
 @theme inline {
+  --font-sans: var(--font-family-sans);
+  --font-display: var(--font-family-display);
   --color-background: var(--background); --color-foreground: var(--foreground);
   --color-card: var(--card); --color-card-foreground: var(--card-foreground);
   --color-popover: var(--popover); --color-popover-foreground: var(--popover-foreground);
@@ -86,20 +66,32 @@
 @layer base {
   *, *::before, *::after { @apply border-border outline-ring/50; border-radius: var(--radius) !important; }
   html { font-size: var(--font-size); scroll-behavior: smooth; }
-  body { @apply bg-background text-foreground; font-family: 'Inter', sans-serif; text-rendering: optimizeLegibility; }
+  body { @apply bg-background text-foreground; font-family: var(--font-family-sans); font-weight: var(--font-weight-normal); text-rendering: optimizeLegibility; }
   button, input, select, textarea { font: inherit; }
   button { cursor: pointer; }
   h1, h2, h3, h4 { color: var(--foreground); }
+
+  /* Exceções pontuais: linhas de separação e réguas de divisão não devem ser arredondadas */
+  hr,
+  .section-rule,
+  .divider-rule,
+  .border-t:not([class*="rounded-"]),
+  .border-b:not([class*="rounded-"]),
+  .divide-y > *,
+  .divide-x > *,
+  .rounded-none {
+    border-radius: 0 !important;
+  }
 }
 
 @keyframes fade-up { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .page-enter { animation: fade-up .45s cubic-bezier(.2,.8,.2,1) both; }
 
-.font-display { font-family: 'Bebas Neue', Impact, sans-serif; letter-spacing: .025em; }
+.font-display { font-family: var(--font-family-display); font-weight: 400; letter-spacing: .025em; }
   .app-shell { width: calc(100% - 2rem); max-width: 1280px; margin-inline: auto; }
 .surface-panel { background: var(--surface-glass); border: 1px solid var(--border); box-shadow: 0 24px 80px rgba(0,0,0,.14); }
 .content-card { background: var(--card); border: 1px solid var(--border); box-shadow: 0 18px 60px rgba(0,0,0,.1); }
-.section-rule { border-top: 1px solid var(--border); padding-top: 1.25rem; }
+.section-rule { border-top: 1px solid var(--border); padding-top: 1.25rem; border-radius: 0 !important; }
 .eyebrow { color: var(--primary); font-size: .7rem; line-height: 1; font-weight: 800; letter-spacing: .18em; text-transform: uppercase; }
 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
 .scrollbar-hide::-webkit-scrollbar { display: none; }

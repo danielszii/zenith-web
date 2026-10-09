@@ -21,12 +21,15 @@ export class ClubeService {
     return await this.clubeRepository.findAll();
   }
 
-  async atualizarClube(id: string, dados: CreateClubeDTO) {
-    return await this.clubeRepository.update(id, dados);
+  async atualizarClube(id: string, dados: Partial<CreateClubeDTO>) {
+    const clube = await this.clubeRepository.update(id, dados);
+    if (!clube) throw new NotFoundError('Clube não encontrado.');
+    return clube;
   }
 
   async deletarClube(id: string) {
-    return await this.clubeRepository.delete(id);
+    const deleted = await this.clubeRepository.delete(id);
+    if (!deleted) throw new NotFoundError('Clube não encontrado.');
   }
 
   async buscarPorId(id: string) {

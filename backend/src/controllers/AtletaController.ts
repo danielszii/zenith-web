@@ -22,11 +22,29 @@ export class AtletaController {
     }
   }
 
+  async publicIndex(req: Request, res: Response, next: NextFunction) {
+    try {
+      const atletas = await this.AtletaService.listarAtletas();
+      return res.json(atletas.map(toPublicAthlete));
+    } catch (error) {
+      next(error);
+    }
+  }
+
   async show(req: Request, res: Response, next: NextFunction) {
     try {
       const { id } = req.params;
       const atleta = await this.AtletaService.buscarPorId(String(id));
       return res.json(atleta);
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  async publicShow(req: Request, res: Response, next: NextFunction) {
+    try {
+      const atleta = await this.AtletaService.buscarPorId(String(req.params.id));
+      return res.json(toPublicAthlete(atleta));
     } catch (error) {
       next(error);
     }
@@ -66,4 +84,17 @@ export class AtletaController {
       next(error);
     }
   }
+}
+
+function toPublicAthlete(atleta: Awaited<ReturnType<AtletaService['buscarPorId']>>) {
+  return {
+    id_atleta: atleta.id_atleta,
+    nome: atleta.nome,
+    foto_perfil: atleta.foto_perfil ?? null,
+    data_nasc: atleta.data_nasc,
+    status: atleta.status,
+    peso: atleta.peso ?? null,
+    altura: atleta.altura ?? null,
+    id_clube: atleta.id_clube,
+  };
 }

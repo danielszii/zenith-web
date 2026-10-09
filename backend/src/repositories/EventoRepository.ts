@@ -50,7 +50,7 @@ export class EventoRepository {
     id_atleta: string,
     id_clube: string,
     id_campeonato: string,
-    data_atual: any,
+    data_atual: string | Date,
   ): Promise<boolean> {
     const dataSegura = new Date(data_atual).toISOString().split("T")[0];
 
@@ -75,10 +75,6 @@ export class EventoRepository {
       id_campeonato,
       dataSegura,
     ]);
-
-    console.log(`\n[BANCO DE DADOS] Busca do atleta: ${id_atleta}`);
-    console.log(`Data segura usada na busca: ${dataSegura}`);
-    console.log(`Resultado do Banco:`, rows);
 
     return rows.length > 0 && rows[0].tipo_evento !== null;
   }

@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 
 dotenv.config({ path: fileURLToPath(new URL('../../.env', import.meta.url)) });
 const baseUrl = process.env.API_URL || 'http://localhost:3000';
-const token = jwt.sign({ id: '00000000-0000-0000-0000-000000000000', role: 'admin' }, process.env.JWT_SECRET || 'fallback_secret_key_local', { expiresIn: '2m' });
+const token = jwt.sign({ id: '00000000-0000-0000-0000-000000000000', role: 'admin' }, process.env.JWT_SECRET || 'zenith_local_development_only', { expiresIn: '2m' });
 const request = async (path: string) => {
   const response = await fetch(`${baseUrl}${path}`, { headers: { Authorization: `Bearer ${token}` } });
   if (!response.ok) throw new Error(`${path}: HTTP ${response.status} ${await response.text()}`);

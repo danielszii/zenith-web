@@ -2,7 +2,6 @@ import { useMemo, useRef } from 'react';
 import { CalendarDays } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import type { Match } from '../types/api';
-import { prepareCarouselMatches } from '../data/mockMatches';
 
 export function MatchTicker({ matches }: { matches: Match[] }) {
   const trackRef = useRef<HTMLDivElement>(null);
@@ -32,7 +31,8 @@ export function MatchTicker({ matches }: { matches: Match[] }) {
   // 2. Próximas e finalizadas aparecem INTERCALADAS (alternadas sem agrupamento)
   // 3. Garante dados fictícios ricos para partidas em andamento
   const ordered = useMemo(() => {
-    return prepareCarouselMatches(matches);
+    const priority: Record<Match['status'], number> = { em_andamento: 0, agendado: 1, encerrado: 2, cancelado: 3 };
+    return [...matches].sort((first, second) => priority[first.status] - priority[second.status] || `${first.data} ${first.hora}`.localeCompare(`${second.data} ${second.hora}`));
   }, [matches]);
 
   // Duplica os itens para criar o ciclo contínuo sem cortes
@@ -87,8 +87,7 @@ function TickerCard({ match, duplicate }: { match: Match; duplicate: boolean }) 
   const played = live || match.status === 'encerrado';
   const home = match.mandante?.nome || 'Mandante';
   const away = match.visitante?.nome || 'Visitante';
-  const isMock = match.id_partida.startsWith('mock-');
-  const targetUrl = isMock ? '/partidas' : `/partidas/${match.id_partida}`;
+  const targetUrl = `/partidas/${match.id_partida}`;
 
   return (
     <Link 

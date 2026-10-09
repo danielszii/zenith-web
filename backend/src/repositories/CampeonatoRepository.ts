@@ -1,5 +1,6 @@
 import { pool } from "../config/database.js";
 import { propsCampeonato } from "../models/Campeonato.js";
+import type { CreateCampeonatoDTO } from '../dtos/CreateCampeonatoDTO.js';
 
 export class CampeonatoRepository {
   async create(campeonato: propsCampeonato): Promise<propsCampeonato> {
@@ -35,32 +36,37 @@ export class CampeonatoRepository {
     return rows.length ? rows[0] : null;
   }
 
-  async update(id: string, data: any) {
+  async update(id: string, data: Partial<CreateCampeonatoDTO>): Promise<propsCampeonato | null> {
     const query = `
     UPDATE campeonatos 
-    SET nome = $1, formato = $2, data_inicio = $3, data_fim = $4, criterios_desempate = $5, status = $6
-    WHERE id_campeonato = $7 RETURNING *;
+    SET nome = COALESCE($1, nome), formato = COALESCE($2, formato),
+        data_inicio = COALESCE($3, data_inicio), data_fim = COALESCE($4, data_fim),
+        criterios_desempate = COALESCE($5, criterios_desempate), status = COALESCE($6, status),
+        modalidade = COALESCE($7, modalidade), categoria = COALESCE($8, categoria)
+    WHERE id_campeonato = $9 RETURNING *;
   `;
     const values = [
       data.nome,
-      data.formato || null,
-      data.data_inicio || null,
-      data.data_fim || null,
-      data.criterios_desempate || null,
-      data.status || "planejado",
+      data.formato,
+      data.data_inicio,
+      data.data_fim,
+      data.criterios_desempate,
+      data.status,
+      data.modalidade,
+      data.categoria,
       id,
     ];
     const { rows } = await pool.query(query, values);
-    return rows[0];
+    return rows[0] ?? null;
   }
 
   async delete(id: string): Promise<boolean> {
     const query = "DELETE FROM campeonatos WHERE id_campeonato = $1;";
-    await pool.query(query, [id]);
-    return true;
+    const result = await pool.query(query, [id]);
+    return Boolean(result.rowCount);
   }
 
-  async findInscricao(id_campeonato: string, id_clube: string): Promise<any> {
+  async findInscricao(id_campeonato: string, id_clube: string): Promise<{ id_campeonato: string; id_clube: string } | undefined> {
     const query = `
     SELECT * FROM campeonatos_clubes 
     WHERE id_campeonato = $1 AND id_clube = $2;
@@ -69,7 +75,7 @@ export class CampeonatoRepository {
     return rows[0];
   }
 
-  async inscreverClube(id_campeonato: string, id_clube: string): Promise<any> {
+  async inscreverClube(id_campeonato: string, id_clube: string): Promise<{ id_campeonato: string; id_clube: string }> {
     const query = `
     INSERT INTO campeonatos_clubes (id_campeonato, id_clube)
     VALUES ($1, $2)

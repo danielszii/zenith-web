@@ -1,69 +1,35 @@
-import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import { UsuarioRepository } from "../repositories/UsuarioRepository.js";
-import { BusinessRuleError } from "../errors/BusinessRuleError.js";
-import { NotFoundError } from "../errors/NotFoundError.js";
-import { CreateUsuarioDTO } from "../dtos/CreateUsuarioDTO.js";
-import { Usuario } from "../models/Usuario.js";
-import { env } from "../config/env.js";
-
-const JWT_SECRET = env.jwtSecret;
+import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
+import { env } from '../config/env.js';
+import type { CreateUsuarioDTO } from '../dtos/CreateUsuarioDTO.js';
+import { BusinessRuleError } from '../errors/BusinessRuleError.js';
+import { UnauthorizedError } from '../errors/UnauthorizedError.js';
+import { Usuario } from '../models/Usuario.js';
+import type { UsuarioRepository } from '../repositories/UsuarioRepository.js';
 
 export class AuthService {
-  public constructor(private readonly usuarioRepository: UsuarioRepository) {}
+  constructor(private readonly usuarioRepository: UsuarioRepository) {}
 
-  // API-03: Criptografia no cadastro
   async cadastrarUsuario(dados: CreateUsuarioDTO) {
     const usuarioExiste = await this.usuarioRepository.findByEmail(dados.email);
-    if (usuarioExiste) {
-      throw new BusinessRuleError("Este e-mail já está cadastrado no sistema.");
-    }
+    if (usuarioExiste) throw new BusinessRuleError('Este e-mail já está cadastrado no sistema.');
 
-    // Salto de criptografia (salt) = 10 (padrão de mercado seguro)
     const senhaCriptografada = await bcrypt.hash(dados.senha, 10);
-
-    const usuarioModel = Usuario.construir(
-      dados.nome,
-      dados.email,
-      senhaCriptografada,
-      dados.role,
-    );
-
-    return await this.usuarioRepository.create(usuarioModel);
+    const usuario = Usuario.construir(dados.nome, dados.email, senhaCriptografada, dados.role);
+    return this.usuarioRepository.create(usuario);
   }
 
-  // API-01: Emissão do Token JWT após checagem da senha
-  async login(email: string, senhaPura: string) {
+  async login(email: string, senha: string) {
+    if (!email || !senha) throw new UnauthorizedError('E-mail e senha são obrigatórios.');
+
     const usuario = await this.usuarioRepository.findByEmail(email);
-    if (!usuario) {
-      throw new NotFoundError(
-        "Credenciais inválidas: e-mail ou senha incorretos.",
-      );
+    if (!usuario || !(await bcrypt.compare(senha, usuario.senha))) {
+      throw new UnauthorizedError('Credenciais inválidas: e-mail ou senha incorretos.');
     }
 
-    // API-03: Compara a senha digitada com o hash criptografado salvo no banco
-    const senhaCorreta = await bcrypt.compare(senhaPura, usuario.senha);
-    if (!senhaCorreta) {
-      throw new BusinessRuleError(
-        "Credenciais inválidas: e-mail ou senha incorretos.",
-      );
-    }
-
-    // Gera o token carregando o ID e a Role do usuário (API-02 / RBAC)
-    const token = jwt.sign(
-      { id: usuario.id_usuario, role: usuario.role },
-      JWT_SECRET,
-      { expiresIn: "8h" },
-    );
-
-    // Retorna os dados do usuário logado e o token stateless
+    const token = jwt.sign({ id: usuario.id_usuario, role: usuario.role }, env.jwtSecret, { expiresIn: '8h' });
     return {
-      usuario: {
-        id: usuario.id_usuario,
-        nome: usuario.nome,
-        email: usuario.email,
-        role: usuario.role,
-      },
+      usuario: { id: usuario.id_usuario, nome: usuario.nome, email: usuario.email, role: usuario.role },
       token,
     };
   }

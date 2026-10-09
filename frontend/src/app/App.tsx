@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
+import { LogIn } from 'lucide-react';
 import { api } from './services/api';
 import { Navbar } from './components/Navbar';
 import type { Match } from './types/api';
@@ -7,7 +8,6 @@ import { SearchBar } from './components/SearchBar';
 import { PlayerProfile } from './components/PlayerProfile';
 import { ChampionshipsPage } from './components/ChampionshipsPage';
 import { Gallery } from './components/Gallery';
-import { ThemeToggle } from './components/ThemeToggle';
 import { Footer } from './components/Footer';
 import { GamesAndResults } from './components/GamesAndResults';
 import { ClubProfile } from './components/ClubProfile';
@@ -78,11 +78,17 @@ export default function App() {
             <Navbar activePage={currentPage} onNavigate={go} />
           </div>
           <div className="ml-auto hidden w-64 2xl:block">
-            <SearchBar onNavigate={go} />
+            <SearchBar />
           </div>
-          <div className="hidden sm:block">
-            <ThemeToggle />
-          </div>
+          <button
+            type="button"
+            onClick={() => navigate('/gestao')}
+            className="button-secondary min-h-10 shrink-0 px-3 sm:px-4"
+            aria-label="Entrar na gestão"
+          >
+            <LogIn className="h-4 w-4" />
+            <span className="hidden lg:inline">Entrar</span>
+          </button>
         </div>
       </header>
 

@@ -52,8 +52,8 @@ export class PartidaRepository {
 
   async delete(id: string): Promise<boolean> {
     const query = "DELETE FROM partidas WHERE id_partida = $1;";
-    await pool.query(query, [id]);
-    return true;
+    const result = await pool.query(query, [id]);
+    return Boolean(result.rowCount);
   }
 
 
