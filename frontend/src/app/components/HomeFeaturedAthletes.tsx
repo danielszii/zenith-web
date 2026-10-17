@@ -59,7 +59,7 @@ export function HomeFeaturedAthletes() {
       </div>
 
       {loading ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className={`grid gap-4 sm:grid-cols-2 ${athletes.length === 3 ? 'lg:grid-cols-3' : 'lg:grid-cols-4'}`}>
           {Array.from({ length: 4 }).map((_, index) => <div key={index} className="h-[27rem] animate-pulse rounded-3xl bg-[var(--muted)]" />)}
         </div>
       ) : athletes.length ? (
@@ -81,6 +81,9 @@ export function HomeFeaturedAthletes() {
           Os destaques aparecerão após as primeiras súmulas finalizadas.
         </div>
       )}
+      <Link to="/estatisticas" className="button-quiet mt-5 inline-flex sm:hidden">
+        Ver ranking <ArrowRight className="h-4 w-4" />
+      </Link>
     </section>
   );
 }

@@ -10,6 +10,7 @@ import {
   Trophy,
   Users,
 } from "lucide-react";
+import { Logo } from "./Logo";
 import { getApiError, zenithApi } from "../services/zenithApi";
 import type {
   Athlete,
@@ -246,9 +247,7 @@ function LoginPage({
     <main className="page-enter flex min-h-[calc(100vh-72px)] flex-1 items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         <div className="mb-8 text-center">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)]">
-            <LockKeyhole className="h-6 w-6" />
-          </span>
+          <Logo full className="mb-7 justify-center" />
           <p className="eyebrow mt-6">Área Zenith</p>
           <h1 className="font-display mt-3 text-5xl leading-none sm:text-6xl">ACESSE SUA CONTA</h1>
           <p className="mx-auto mt-4 max-w-sm text-sm leading-6 text-[var(--muted-foreground)]">

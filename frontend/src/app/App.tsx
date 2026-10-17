@@ -20,6 +20,7 @@ import { MatchTicker } from './components/MatchTicker';
 import { HomeCompetitions } from './components/HomeCompetitions';
 import { HomeFeaturedAthletes } from './components/HomeFeaturedAthletes';
 import { AthletesPage } from './components/AthletesPage';
+import { NotFoundPage } from './components/NotFoundPage';
 
 const pageRoutes: Record<string, string> = {
   dashboard: '/',
@@ -72,18 +73,18 @@ export default function App() {
   return (
     <div className="flex min-h-screen flex-col text-[var(--foreground)]">
       <header className="sticky top-0 z-50 border-b border-[var(--border)] bg-[color:var(--background)]/85 backdrop-blur-2xl">
-        <div className="app-shell flex h-[72px] min-w-0 items-center gap-2 sm:gap-4">
-          <Logo onClick={() => navigate('/')} />
-          <div className="ml-auto min-w-0 md:ml-5">
+        <div className="app-shell flex min-w-0 flex-wrap items-center gap-2 py-2 lg:h-[72px] lg:flex-nowrap lg:gap-4 lg:py-0">
+          <Logo compact onClick={() => navigate('/')} />
+          <div className="order-3 w-full min-w-0 lg:order-none lg:ml-5 lg:w-auto">
             <Navbar activePage={currentPage} onNavigate={go} />
           </div>
-          <div className="ml-auto hidden w-64 2xl:block">
+          <div className="ml-auto hidden w-52 xl:block 2xl:w-64">
             <SearchBar />
           </div>
           <button
             type="button"
             onClick={() => navigate('/gestao')}
-            className="button-secondary min-h-10 shrink-0 px-3 sm:px-4"
+            className="button-secondary ml-auto min-h-10 shrink-0 px-3 sm:px-4 xl:ml-0"
             aria-label="Entrar na gestão"
           >
             <LogIn className="h-4 w-4" />
@@ -110,6 +111,7 @@ export default function App() {
         <Route path="/management" element={<Navigate to="/gestao" replace />} />
         <Route path="/matches/:id?" element={<LegacyRedirect target="/partidas" />} />
         <Route path="/statistics" element={<Navigate to="/estatisticas" replace />} />
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
 
       <Footer />

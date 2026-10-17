@@ -1,226 +1,95 @@
-import { useState } from 'react';
-import { Star, Calendar, MapPin, Video, Image as ImageIcon } from 'lucide-react';
-import { PhotoUpload } from './PhotoUpload';
+import { useMemo, useState } from 'react';
+import { Camera, Clock3, Image as ImageIcon, Play, Sparkles, Video } from 'lucide-react';
 
-interface GalleryItem {
+type MediaCategory = 'todos' | 'jogos' | 'bastidores' | 'comunidade';
+type MediaItem = {
   id: string;
-  type: 'photo' | 'video';
+  type: 'foto' | 'video';
   title: string;
-  date: string;
-  location: string;
-  category: string;
-  featured: boolean;
-  imageUrl?: string;
-}
+  description: string;
+  category: Exclude<MediaCategory, 'todos'>;
+  tone: string;
+  featured?: boolean;
+};
 
-const mockGalleryItems: GalleryItem[] = [
-  {
-    id: '1',
-    type: 'photo',
-    title: 'Estrela Mundial da Praia de Praia',
-    date: '15/04',
-    location: 'SuperLiga',
-    category: 'feminino',
-    featured: true,
-  },
-  {
-    id: '2',
-    type: 'video',
-    title: 'Superliga Feminina',
-    date: '12/04',
-    location: 'São Paulo',
-    category: 'feminino',
-    featured: true,
-  },
-  {
-    id: '3',
-    type: 'photo',
-    title: 'Estrela Mundial da Praia de Praia',
-    date: '10/04',
-    location: 'SuperLiga',
-    category: 'feminino',
-    featured: true,
-  },
-  {
-    id: '4',
-    type: 'photo',
-    title: 'Celubes - Final da Superliga Masculina',
-    date: '08/04',
-    location: 'Rio de Janeiro',
-    category: 'masculino',
-    featured: false,
-  },
-  {
-    id: '5',
-    type: 'photo',
-    title: 'Campeonato Brasileiro Sub-21',
-    date: '05/04',
-    location: 'Belo Horizonte',
-    category: 'evento',
-    featured: false,
-  },
-  {
-    id: '6',
-    type: 'video',
-    title: 'Melhores Momentos - Semifinal',
-    date: '03/04',
-    location: 'Brasília',
-    category: 'evento',
-    featured: true,
-  },
-  {
-    id: '7',
-    type: 'photo',
-    title: 'Treino da Seleção Nacional',
-    date: '01/04',
-    location: 'Centro de Treinamento',
-    category: 'masculino',
-    featured: false,
-  },
-  {
-    id: '8',
-    type: 'photo',
-    title: 'Abertura do Campeonato Regional',
-    date: '28/03',
-    location: 'Porto Alegre',
-    category: 'evento',
-    featured: false,
-  },
+const demoMedia: MediaItem[] = [
+  { id: '1', type: 'video', title: 'Melhores momentos da rodada', description: 'Gols, defesas e os lances que decidiram os jogos.', category: 'jogos', featured: true, tone: 'from-lime-400/35 via-emerald-900/20 to-transparent' },
+  { id: '2', type: 'foto', title: 'Aquecimento antes do apito', description: 'Preparação das equipes minutos antes da partida.', category: 'bastidores', tone: 'from-blue-500/30 via-cyan-900/15 to-transparent' },
+  { id: '3', type: 'foto', title: 'A energia das arquibancadas', description: 'Torcida e comunidade fazendo parte da competição.', category: 'comunidade', tone: 'from-amber-400/30 via-orange-900/15 to-transparent' },
+  { id: '4', type: 'video', title: 'Gol da rodada', description: 'O lance escolhido para representar a rodada.', category: 'jogos', tone: 'from-fuchsia-500/25 via-purple-900/15 to-transparent' },
+  { id: '5', type: 'foto', title: 'Vestiário e concentração', description: 'Os detalhes que antecedem a entrada em quadra.', category: 'bastidores', tone: 'from-rose-500/25 via-red-950/15 to-transparent' },
+];
+
+const filters: { id: MediaCategory; label: string }[] = [
+  { id: 'todos', label: 'Todos' },
+  { id: 'jogos', label: 'Jogos' },
+  { id: 'bastidores', label: 'Bastidores' },
+  { id: 'comunidade', label: 'Comunidade' },
 ];
 
 export function Gallery() {
-  const [activeFilter, setActiveFilter] = useState('todos');
-
-  const filters = [
-    { id: 'todos', label: 'Todos' },
-    { id: 'feminino', label: 'Feminino' },
-    { id: 'masculino', label: 'Masculino' },
-    { id: 'evento', label: 'Evento' },
-    { id: 'destaque', label: 'Destaque' },
-  ];
-
-  const filteredItems = mockGalleryItems.filter((item) => {
-    if (activeFilter === 'todos') return true;
-    if (activeFilter === 'destaque') return item.featured;
-    return item.category === activeFilter;
-  });
+  const [activeFilter, setActiveFilter] = useState<MediaCategory>('todos');
+  const filtered = useMemo(
+    () => demoMedia.filter(item => activeFilter === 'todos' || item.category === activeFilter),
+    [activeFilter],
+  );
 
   return (
-    <div className="p-8">
-      <PhotoUpload />
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl text-[var(--foreground)] font-semibold mb-2">
-            Galeria de Fotos e Vídeos
-          </h1>
-          <p className="text-[var(--muted-foreground)] text-sm">Momentos marcantes das competições</p>
+    <main className="page-enter flex-1 pb-16">
+      <section className="app-shell grid gap-8 pb-10 pt-14 lg:grid-cols-[1fr_auto] lg:items-end lg:pt-20">
+        <div>
+          <p className="eyebrow">Histórias além do placar</p>
+          <h1 className="font-display mt-3 text-6xl leading-[.88] md:text-8xl">MÍDIA<br /><span className="text-[var(--primary)]">ZENITH</span></h1>
+          <p className="mt-5 max-w-xl text-sm leading-6 text-[var(--muted-foreground)]">
+            Um espaço preparado para reunir fotos, melhores momentos e histórias das competições.
+          </p>
         </div>
+        <div className="rounded-2xl border border-amber-400/20 bg-amber-400/5 px-4 py-3 text-xs leading-5 text-amber-200/80">
+          <span className="flex items-center gap-2 font-bold text-amber-300"><Sparkles className="h-3.5 w-3.5" /> Conteúdo demonstrativo</span>
+          <span className="mt-1 block max-w-64">A publicação oficial será conectada ao módulo de mídia.</span>
+        </div>
+      </section>
 
-        {/* Filters */}
-        <div className="flex items-center gap-3 mb-8 overflow-x-auto pb-2 scrollbar-hide">
-          {filters.map((filter) => (
-            <button
-              key={filter.id}
-              onClick={() => setActiveFilter(filter.id)}
-              className={`px-4 py-2 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
-                activeFilter === filter.id
-                  ? 'bg-[var(--primary)] text-[var(--primary-foreground)]'
-                  : 'bg-[var(--surface-glass)] text-[var(--muted-foreground)] hover:text-[var(--foreground)] hover:bg-[var(--surface-glass-hover)] border border-[var(--border)]'
-              }`}
-            >
+      <section className="app-shell">
+        <div className="mb-7 flex items-center gap-1 overflow-x-auto rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-1.5">
+          {filters.map(filter => (
+            <button key={filter.id} type="button" onClick={() => setActiveFilter(filter.id)} className={`shrink-0 rounded-xl px-4 py-2.5 text-xs font-extrabold transition-colors ${activeFilter === filter.id ? 'bg-[var(--primary)] text-[var(--primary-foreground)]' : 'text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]'}`}>
               {filter.label}
             </button>
           ))}
         </div>
 
-        {/* Gallery Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredItems.map((item) => (
-            <div
-              key={item.id}
-              className="group bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] overflow-hidden hover:border-[var(--muted)] transition-all cursor-pointer"
-            >
-              {/* Image/Video Thumbnail */}
-              <div className="relative aspect-video bg-[var(--muted)] flex items-center justify-center overflow-hidden">
-                {/* Placeholder for image */}
-                <div className="absolute inset-0 bg-gradient-to-br from-[var(--primary)]/10 to-[var(--secondary)]/10 group-hover:scale-105 transition-transform duration-300">
-                  {item.type === 'video' ? (
-                    <div className="flex items-center justify-center h-full">
-                      <Video className="w-12 h-12 text-[var(--muted-foreground)]" />
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <ImageIcon className="w-12 h-12 text-[var(--muted-foreground)]" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Featured Badge */}
-                {item.featured && (
-                  <div className="absolute top-3 left-3 flex items-center gap-1 px-2 py-1 bg-[var(--primary)] rounded-lg text-xs font-medium text-[var(--primary-foreground)]">
-                    <Star className="w-3 h-3 fill-current" />
-                    Destaque
-                  </div>
-                )}
-
-                {/* Video Badge */}
-                {item.type === 'video' && (
-                  <div className="absolute top-3 right-3 p-2 bg-black/50 backdrop-blur-sm rounded-lg">
-                    <Video className="w-4 h-4 text-white" />
-                  </div>
-                )}
+        <div className="grid auto-rows-[18rem] gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {filtered.map((item, index) => (
+            <article key={item.id} className={`group relative overflow-hidden rounded-3xl border border-[var(--border)] bg-[var(--card)] ${index === 0 && activeFilter === 'todos' ? 'md:col-span-2 lg:row-span-2 lg:min-h-[37rem]' : ''}`}>
+              <div className={`absolute inset-0 bg-gradient-to-br ${item.tone}`} />
+              <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(255,255,255,.08)_1px,transparent_0)] bg-[length:14px_14px] opacity-50" />
+              <div className="absolute left-5 top-5 flex items-center gap-2 rounded-full border border-white/10 bg-black/30 px-3 py-1.5 text-[.6rem] font-black uppercase tracking-[.14em] text-white backdrop-blur-md">
+                {item.type === 'video' ? <Video className="h-3.5 w-3.5" /> : <ImageIcon className="h-3.5 w-3.5" />}{item.type}
               </div>
-
-              {/* Content */}
-              <div className="p-4">
-                <h3 className="text-[var(--foreground)] font-medium text-sm mb-3 line-clamp-2 group-hover:text-[var(--primary)] transition-colors">
-                  {item.title}
-                </h3>
-
-                <div className="space-y-1.5">
-                  <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-                    <Calendar className="w-3.5 h-3.5" />
-                    <span>{item.date}</span>
-                  </div>
-
-                  <div className="flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
-                    <MapPin className="w-3.5 h-3.5" />
-                    <span>{item.location}</span>
-                  </div>
-                </div>
+              <div className="absolute inset-0 grid place-items-center">
+                <span className="grid h-16 w-16 place-items-center rounded-full border border-white/15 bg-black/25 text-white backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
+                  {item.type === 'video' ? <Play className="ml-1 h-6 w-6 fill-current" /> : <Camera className="h-6 w-6" />}
+                </span>
               </div>
-            </div>
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black via-black/75 to-transparent p-5 pt-24 sm:p-6">
+                <p className="text-[.62rem] font-black uppercase tracking-[.15em] text-[var(--primary)]">{categoryLabel(item.category)}</p>
+                <h2 className={`${index === 0 && activeFilter === 'todos' ? 'mt-2 text-3xl sm:text-4xl' : 'mt-1 text-xl'} font-black leading-tight text-white`}>{item.title}</h2>
+                <p className="mt-2 max-w-xl text-xs leading-5 text-white/60">{item.description}</p>
+              </div>
+            </article>
           ))}
         </div>
 
-        {/* Stats */}
-        <div className="mt-12 grid grid-cols-1 md:grid-cols-4 gap-6">
-          <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6 hover:bg-[var(--surface-glass-hover)] transition-all">
-            <div className="text-xs text-[var(--muted-foreground)] mb-2 font-medium">Total de Fotos</div>
-            <div className="text-3xl font-semibold text-[var(--foreground)] mb-1">1,247</div>
-            <div className="text-xs text-[var(--success)]">+45 esta semana</div>
-          </div>
-
-          <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6 hover:bg-[var(--surface-glass-hover)] transition-all">
-            <div className="text-xs text-[var(--muted-foreground)] mb-2 font-medium">Total de Vídeos</div>
-            <div className="text-3xl font-semibold text-[var(--foreground)] mb-1">324</div>
-            <div className="text-xs text-[var(--success)]">+12 esta semana</div>
-          </div>
-
-          <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6 hover:bg-[var(--surface-glass-hover)] transition-all">
-            <div className="text-xs text-[var(--muted-foreground)] mb-2 font-medium">Eventos Cobertos</div>
-            <div className="text-3xl font-semibold text-[var(--foreground)] mb-1">89</div>
-            <div className="text-xs text-[var(--muted-foreground)]">este ano</div>
-          </div>
-
-          <div className="bg-[var(--surface-glass)] backdrop-blur-xl rounded-2xl border border-[var(--border)] p-6 hover:bg-[var(--surface-glass-hover)] transition-all">
-            <div className="text-xs text-[var(--muted-foreground)] mb-2 font-medium">Visualizações</div>
-            <div className="text-3xl font-semibold text-[var(--foreground)] mb-1">2.5M</div>
-            <div className="text-xs text-[var(--success)]">+15% vs mês anterior</div>
-          </div>
+        <div className="mt-8 flex items-start gap-4 rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-5">
+          <Clock3 className="mt-0.5 h-5 w-5 shrink-0 text-[var(--primary)]" />
+          <div><strong className="text-sm">Publicação em preparação</strong><p className="mt-1 text-xs leading-5 text-[var(--muted-foreground)]">Quando o módulo estiver conectado, esta página exibirá registros oficiais com data, partida e créditos do conteúdo.</p></div>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
+}
+
+function categoryLabel(category: MediaItem['category']) {
+  return ({ jogos: 'Dentro de quadra', bastidores: 'Bastidores', comunidade: 'Comunidade' })[category];
 }

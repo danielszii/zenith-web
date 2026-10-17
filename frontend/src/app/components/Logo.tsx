@@ -1,9 +1,23 @@
-interface LogoProps { showText?: boolean; className?: string; onClick?: () => void }
-export function Logo({ showText = true, className = '', onClick }: LogoProps) {
-  return <button onClick={onClick} className={`group flex items-center gap-3 ${className}`} aria-label="Ir para o início">
-    <span className="grid h-10 w-10 place-items-center rounded-xl border border-[var(--border)] bg-[var(--foreground)] shadow-lg shadow-black/10">
-      <img src="/Logotipo Zenith.svg" alt="" className="h-6 w-6 object-contain brightness-0"/>
-    </span>
-    {showText && <span className="hidden text-left lg:block"><span className="font-display block text-[1.65rem] leading-none tracking-[.06em]">ZENITH</span><span className="block text-[.55rem] font-bold tracking-[.24em] text-[var(--muted-foreground)]">SPORTS OS</span></span>}
-  </button>;
+interface LogoProps {
+  compact?: boolean;
+  full?: boolean;
+  className?: string;
+  onClick?: () => void;
+}
+
+export function Logo({ compact = false, full = false, className = '', onClick }: LogoProps) {
+  const content = (
+    <>
+      {!full && <img src="/zenith-isotipo.png" alt={compact ? 'Zenith Sports OS' : ''} aria-hidden={!compact} className={`${compact ? 'h-11 w-11 lg:h-14 lg:w-14' : 'h-10 w-10 lg:hidden'} shrink-0 object-contain`} />}
+      {!compact && <img src="/zenith-logo-completa.png" alt="Zenith Sports OS" className={`${full ? 'block' : 'hidden lg:block'} h-11 w-auto max-w-[210px] object-contain`} />}
+    </>
+  );
+
+  if (!onClick) return <div className={`inline-flex items-center ${className}`}>{content}</div>;
+
+  return (
+    <button type="button" onClick={onClick} className={`inline-flex items-center transition-opacity hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--primary)] ${className}`} aria-label="Ir para a pagina inicial">
+      {content}
+    </button>
+  );
 }
