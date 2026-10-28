@@ -20,7 +20,7 @@ export class EstatisticaRepository {
         JOIN partidas p ON p.id_partida = e.id_partida
         JOIN atletas a ON a.id_atleta = e.id_atleta
         LEFT JOIN clubes c ON c.id_clube = a.id_clube
-        WHERE e.tipo_evento = 'GOL' AND ($1::uuid IS NULL OR p.id_campeonato = $1)
+        WHERE e.tipo_evento = 'GOL' AND e.cancelado = false AND ($1::uuid IS NULL OR p.id_campeonato = $1)
         GROUP BY a.id_atleta, a.nome, a.foto_perfil, c.nome
         ORDER BY total DESC, a.nome ASC
         LIMIT 10
@@ -32,6 +32,7 @@ export class EstatisticaRepository {
         JOIN atletas a ON a.id_atleta = COALESCE(e.id_atleta_relacionado, e.id_atleta_assistencia)
         LEFT JOIN clubes c ON c.id_clube = a.id_clube
         WHERE e.tipo_evento = 'GOL'
+          AND e.cancelado = false
           AND COALESCE(e.id_atleta_relacionado, e.id_atleta_assistencia) IS NOT NULL
           AND ($1::uuid IS NULL OR p.id_campeonato = $1)
         GROUP BY a.id_atleta, a.nome, c.nome
@@ -47,6 +48,7 @@ export class EstatisticaRepository {
         JOIN atletas a ON a.id_atleta = e.id_atleta
         LEFT JOIN clubes c ON c.id_clube = a.id_clube
         WHERE e.tipo_evento IN ('CARTAO_AMARELO', 'CARTAO_VERMELHO')
+          AND e.cancelado = false
           AND ($1::uuid IS NULL OR p.id_campeonato = $1)
         GROUP BY a.id_atleta, a.nome, c.nome
         ORDER BY vermelhos DESC, amarelos DESC, a.nome ASC

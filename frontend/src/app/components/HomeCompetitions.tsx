@@ -32,12 +32,12 @@ export function HomeCompetitions() {
 
       {loading ? (
         <div className="grid gap-4 md:grid-cols-3">
-          {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-60 animate-pulse rounded-3xl bg-[var(--muted)]" />)}
+          {Array.from({ length: 3 }).map((_, index) => <div key={index} className="h-60 animate-pulse rounded-2xl bg-[var(--muted)]" />)}
         </div>
       ) : championships.length ? (
         <div className="grid gap-4 md:grid-cols-3">
           {championships.map(championship => (
-            <article key={championship.id_campeonato} className="group flex min-h-60 flex-col rounded-3xl border border-[var(--border)] bg-[var(--card)] p-6 transition duration-300 hover:-translate-y-1 hover:border-[color:var(--primary)]/40 hover:bg-[var(--surface-glass-hover)]">
+            <article key={championship.id_campeonato} className="group flex min-h-60 flex-col rounded-2xl border border-[var(--border)] bg-[var(--card)] p-6 transition duration-300 hover:-translate-y-1 hover:border-[color:var(--primary)]/40 hover:bg-[var(--surface-glass-hover)]">
               <div className="flex items-start justify-between">
                 <span className="grid h-10 w-10 place-items-center bg-[var(--primary)] text-[var(--primary-foreground)]">
                   <Trophy className="h-4 w-4" />

@@ -29,7 +29,6 @@ export function MatchTicker({ matches }: { matches: Match[] }) {
   // Ordena a sequência:
   // 1. Jogos ao vivo têm PRIORIDADE e aparecem no início
   // 2. Próximas e finalizadas aparecem INTERCALADAS (alternadas sem agrupamento)
-  // 3. Garante dados fictícios ricos para partidas em andamento
   const ordered = useMemo(() => {
     const priority: Record<Match['status'], number> = { em_andamento: 0, agendado: 1, encerrado: 2, cancelado: 3 };
     return [...matches].sort((first, second) => priority[first.status] - priority[second.status] || `${first.data} ${first.hora}`.localeCompare(`${second.data} ${second.hora}`));
@@ -124,7 +123,7 @@ function TickerCard({ match, duplicate }: { match: Match; duplicate: boolean }) 
       </div>
 
       <div className="col-span-3 mt-2.5 flex items-center justify-between border-t border-[var(--border)] pt-2 text-[.58rem] font-bold uppercase tracking-wider text-[var(--muted-foreground)]">
-        <span className="max-w-44 truncate text-[var(--primary)]">{match.campeonato?.nome || 'Zenith League'}</span>
+        <span className="max-w-44 truncate text-[var(--primary)]">{match.campeonato?.nome || 'Competição'}</span>
         <span>{formatDate(match.data)}</span>
       </div>
     </Link>

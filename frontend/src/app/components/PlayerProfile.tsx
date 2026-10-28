@@ -42,8 +42,8 @@ export function PlayerProfile() {
     <main className="page-enter flex-1 pb-16">
       <section className="app-shell pt-8"><Link to="/atletas" className="button-quiet inline-flex"><ArrowLeft className="h-4 w-4" /> Todos os atletas</Link></section>
 
-      <section className="mt-6 border-y border-[var(--border)] bg-[var(--card)]">
-        <div className="app-shell grid min-h-72 md:grid-cols-[220px_1fr_auto]">
+      <section className="app-shell mt-6 overflow-hidden rounded-2xl border border-[var(--border)] bg-[var(--card)]">
+        <div className="grid min-h-72 md:grid-cols-[220px_1fr_auto]">
           <div className="relative grid min-h-52 place-items-center overflow-hidden border-b border-[var(--border)] bg-[var(--primary)] text-[var(--primary-foreground)] md:border-b-0 md:border-r">
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(8,11,10,.18)_1px,transparent_0)] bg-[length:10px_10px]" />
             <img src={athlete.foto_perfil || defaultPlayerPhoto} alt={athlete.nome} onError={(e) => { e.currentTarget.src = defaultPlayerPhoto; }} className="absolute inset-0 h-full w-full object-cover object-[center_12%]" />

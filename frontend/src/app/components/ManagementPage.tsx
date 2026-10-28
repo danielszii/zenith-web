@@ -98,6 +98,15 @@ export function ManagementPage() {
   const [championships, setChampionships] = useState<Championship[]>([]);
   const [matches, setMatches] = useState<Match[]>([]);
 
+  useEffect(() => {
+    const expireSession = () => {
+      setUser(null);
+      setNotice({ error: true, text: 'Sua sessão expirou. Entre novamente.' });
+    };
+    window.addEventListener('zenith:session-expired', expireSession);
+    return () => window.removeEventListener('zenith:session-expired', expireSession);
+  }, []);
+
   const reload = useCallback(async (role?: UserRole) => {
     setBusy(true);
     try {
@@ -255,7 +264,7 @@ function LoginPage({
           </p>
         </div>
 
-        <section className="rounded-3xl border border-[var(--border)] bg-[var(--surface-glass)] p-6 shadow-2xl shadow-black/20 sm:p-8">
+        <section className="rounded-2xl border border-[var(--border)] bg-[var(--surface-glass)] p-6 shadow-2xl shadow-black/20 sm:p-8">
           {notice?.error && (
             <div role="alert" className="mb-5 rounded-xl border border-red-500/30 bg-red-500/10 p-3 text-sm text-red-300">
               {notice.text}

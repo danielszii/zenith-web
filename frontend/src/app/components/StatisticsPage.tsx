@@ -67,7 +67,7 @@ export function StatisticsPage() {
       </section>
 
       <section className="app-shell mt-12 grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
-        <div className="surface-panel overflow-hidden rounded-3xl">
+        <div className="surface-panel overflow-hidden rounded-2xl">
           <div className="flex flex-col gap-4 border-b border-[var(--border)] p-5 sm:flex-row sm:items-center sm:justify-between">
             <div><p className="eyebrow">Destaques individuais</p><h2 className="font-display mt-1 text-3xl tracking-wide">LÍDERES DA TEMPORADA</h2></div>
             <div className="scrollbar-hide flex overflow-x-auto rounded-full bg-[var(--background)] p-1">
@@ -77,7 +77,7 @@ export function StatisticsPage() {
           <RankingList loading={loading} ranking={ranking} rows={leaders} />
         </div>
 
-        <div className="surface-panel overflow-hidden rounded-3xl">
+        <div className="surface-panel overflow-hidden rounded-2xl">
           <div className="border-b border-[var(--border)] p-5"><p className="eyebrow">Força coletiva</p><h2 className="font-display mt-1 text-3xl tracking-wide">ATAQUES MAIS EFICIENTES</h2></div>
           <div className="divide-y divide-[var(--border)]">
             {loading ? <LoadingRows /> : stats?.clubes.length ? stats.clubes.map((club, index) => (
@@ -91,7 +91,7 @@ export function StatisticsPage() {
         </div>
       </section>
 
-      <section className="app-shell mt-5 rounded-3xl border border-[var(--border)] bg-[linear-gradient(120deg,var(--card),color-mix(in_srgb,var(--primary),transparent_94%))] p-6 md:flex md:items-center md:justify-between md:p-8">
+      <section className="app-shell mt-5 rounded-2xl border border-[var(--border)] bg-[linear-gradient(120deg,var(--card),color-mix(in_srgb,var(--primary),transparent_94%))] p-6 md:flex md:items-center md:justify-between md:p-8">
         <div className="flex items-start gap-4"><div className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[var(--primary)] text-[var(--primary-foreground)]"><Medal className="h-5 w-5" /></div><div><h3 className="text-lg font-extrabold">Cada evento conta uma história</h3><p className="mt-1 max-w-2xl text-sm leading-6 text-[var(--muted-foreground)]">Os dados vêm das súmulas registradas no aplicativo e são consolidados automaticamente no portal.</p></div></div>
         <Link to="/partidas" className="button-secondary mt-5 md:mt-0">Ver partidas <ArrowUpRight className="h-4 w-4" /></Link>
       </section>

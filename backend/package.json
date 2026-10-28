@@ -6,11 +6,19 @@
   "scripts": {
     "dev": "tsx watch src/server.ts",
     "start": "node dist/server.js",
-    "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc --noEmit",
-    "db:migrate": "tsx src/scripts/migrate.ts",
+    "build": "npm run db:generate && tsc -p tsconfig.json",
+    "typecheck": "npm run db:generate && tsc --noEmit",
+    "db:generate": "prisma generate",
+    "db:format": "prisma format",
+    "db:validate": "prisma validate",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
+    "db:studio": "prisma studio",
+    "db:introspect": "prisma db pull",
+    "db:seed": "tsx src/scripts/seedDemo.ts",
     "db:photos": "tsx src/scripts/updatePhotos.ts",
-    "test:mobile": "tsx src/scripts/smokeMobile.ts"
+    "test:mobile": "tsx src/scripts/smokeMobile.ts",
+    "admin:create": "tsx src/scripts/createAdmin.ts"
   },
   "keywords": [],
   "author": "",
@@ -23,21 +31,26 @@
     "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "^25.6.0",
     "@types/pg": "^8.20.0",
+    "prisma": "^7.10.1",
     "ts-node-dev": "^2.0.0",
     "tsx": "^4.21.0",
     "typescript": "^6.0.3"
   },
   "dependencies": {
+    "@prisma/adapter-pg": "^7.10.1",
+    "@prisma/client": "^7.10.1",
     "bcrypt": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "express": "^5.2.1",
+    "express-rate-limit": "^8.7.1",
+    "helmet": "^8.3.0",
     "jsonwebtoken": "^9.0.3",
     "pg": "^8.20.0",
     "reflect-metadata": "^0.2.2",
-    "zod": "^4.4.3"
+    "zod": "^4.6.7"
   },
   "ts-node": {
     "esm": true,

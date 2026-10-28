@@ -25,12 +25,12 @@ export class EventoRepository {
 
   async findByPartida(id_partida: string): Promise<propsEventoSumula[]> {
     const query = `
-      SELECT e.*, a.nome as nome_atleta, c.nome as nome_clube
+      SELECT e.*, e.sequencia::text as sequencia, a.nome as nome_atleta, c.nome as nome_clube
       FROM eventos_sumula e -- CORRIGIDO: Nome correto da tabela
       LEFT JOIN atletas a ON e.id_atleta = a.id_atleta
       LEFT JOIN clubes c ON e.id_clube = c.id_clube
-      WHERE e.id_partida = $1
-      ORDER BY e.minuto_evento ASC;
+      WHERE e.id_partida = $1 AND e.cancelado = false
+      ORDER BY e.sequencia ASC, e.minuto_evento ASC, e.segundo_evento ASC;
     `;
 
     const { rows } = await pool.query(query, [id_partida]);

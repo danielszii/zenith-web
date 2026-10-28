@@ -80,28 +80,32 @@ export class AtletaRepository {
         (
   SELECT COUNT(*)::int 
           FROM eventos_sumula 
-          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'GOL'
+          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'GOL' AND cancelado = false
         ) AS gols,
         (
           SELECT COUNT(*)::int 
           FROM eventos_sumula 
-          WHERE id_atleta_assistencia = $1 AND UPPER(tipo_evento) = 'GOL'
+          WHERE COALESCE(id_atleta_relacionado, id_atleta_assistencia) = $1 AND UPPER(tipo_evento) = 'GOL' AND cancelado = false
         ) AS assistencias,
         (
           SELECT COUNT(*)::int 
           FROM eventos_sumula 
-          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'CARTAO_AMARELO'
+          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'CARTAO_AMARELO' AND cancelado = false
         ) AS cartoes_amarelos,
         (
           SELECT COUNT(*)::int 
           FROM eventos_sumula 
-          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'CARTAO_VERMELHO'
+          WHERE id_atleta = $1 AND UPPER(tipo_evento) = 'CARTAO_VERMELHO' AND cancelado = false
         ) AS cartoes_vermelhos,
         (
-          -- ATENÇÃO AQUI: Leia a nota explicativa abaixo sobre as partidas!
-          SELECT COUNT(DISTINCT id_partida)::int 
-          FROM eventos_sumula 
-          WHERE id_atleta = $1 OR id_atleta_assistencia = $1
+          SELECT COUNT(DISTINCT participacao.id_partida)::int
+          FROM (
+            SELECT id_partida FROM escalacoes_partida WHERE id_atleta = $1 AND confirmado = true
+            UNION
+            SELECT id_partida FROM eventos_sumula
+            WHERE cancelado = false
+              AND (id_atleta = $1 OR COALESCE(id_atleta_relacionado, id_atleta_assistencia) = $1)
+          ) participacao
         ) AS numero_partidas
       FROM atletas a
       LEFT JOIN clubes c ON a.id_clube = c.id_clube

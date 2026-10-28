@@ -1,0 +1,240 @@
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "esm"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Clube {
+  id_clube       String  @id @db.Uuid
+  nome           String  @db.VarChar(150)
+  brasao         String?
+  cores_oficiais String? @db.VarChar(100)
+  responsavel    String? @db.VarChar(150)
+  cnpj           String? @unique @db.VarChar(18)
+
+  atletas           Atleta[]
+  campeonatos       CampeonatoClube[]
+  partidasMandante  Partida[]          @relation("Mandante")
+  partidasVisitante Partida[]          @relation("Visitante")
+  eventos           EventoSumula[]
+  pessoasPartida    PessoaPartida[]
+  escalacoesPartida EscalacaoPartida[]
+
+  @@map("clubes")
+}
+
+model Campeonato {
+  id_campeonato       String   @id @db.Uuid
+  nome                String   @db.VarChar(150)
+  formato             String?  @db.VarChar(80)
+  data_inicio         DateTime @db.Date
+  data_fim            DateTime @db.Date
+  criterios_desempate String?
+  status              String   @default("planejado") @db.VarChar(30)
+  modalidade          String   @db.VarChar(20)
+  categoria           String?  @db.VarChar(30)
+
+  clubes   CampeonatoClube[]
+  partidas Partida[]
+
+  @@map("campeonatos")
+}
+
+model CampeonatoClube {
+  id_campeonato String @db.Uuid
+  id_clube      String @db.Uuid
+
+  campeonato Campeonato @relation(fields: [id_campeonato], references: [id_campeonato], onDelete: Cascade)
+  clube      Clube      @relation(fields: [id_clube], references: [id_clube], onDelete: Cascade)
+
+  @@id([id_campeonato, id_clube])
+  @@map("campeonatos_clubes")
+}
+
+model Atleta {
+  id_atleta      String   @id @db.Uuid
+  nome           String   @db.VarChar(150)
+  cpf            String   @unique @db.VarChar(14)
+  rg             String?  @db.VarChar(30)
+  foto_perfil    String?
+  data_nasc      DateTime @db.Date
+  status         String   @default("ativo") @db.VarChar(30)
+  peso           Decimal? @db.Decimal(5, 2)
+  altura         Decimal? @db.Decimal(4, 2)
+  tipo_sanguineo String   @db.VarChar(5)
+  id_clube       String?  @db.Uuid
+
+  clube               Clube?             @relation(fields: [id_clube], references: [id_clube], onDelete: SetNull)
+  eventos             EventoSumula[]     @relation("AtletaEvento")
+  assistencias        EventoSumula[]     @relation("AtletaAssistencia")
+  eventosRelacionados EventoSumula[]     @relation("AtletaRelacionado")
+  escalacoes          EscalacaoPartida[]
+
+  @@map("atletas")
+}
+
+model Partida {
+  id_partida     String   @id @db.Uuid
+  id_campeonato  String   @db.Uuid
+  id_mandante    String   @db.Uuid
+  id_visitante   String   @db.Uuid
+  data           DateTime @db.Date
+  hora           DateTime @db.Time(6)
+  local          String   @db.VarChar(200)
+  status         String   @default("agendado") @db.VarChar(30)
+  gols_mandante  Int      @default(0)
+  gols_visitante Int      @default(0)
+
+  campeonato  Campeonato         @relation(fields: [id_campeonato], references: [id_campeonato])
+  mandante    Clube              @relation("Mandante", fields: [id_mandante], references: [id_clube])
+  visitante   Clube              @relation("Visitante", fields: [id_visitante], references: [id_clube])
+  eventos     EventoSumula[]
+  mesarios    PartidaMesario[]
+  pessoas     PessoaPartida[]
+  escalacoes  EscalacaoPartida[]
+  assinaturas AssinaturaSumula[]
+  periodos    PeriodoPartida[]
+  operacoes   OperacaoMobile[]
+
+  @@index([id_campeonato], map: "idx_partidas_campeonato")
+  @@map("partidas")
+}
+
+model Usuario {
+  id_usuario String   @id @db.Uuid
+  nome       String   @db.VarChar(150)
+  email      String   @unique @db.VarChar(255)
+  senha      String
+  role       String   @db.VarChar(20)
+  created_at DateTime @default(now()) @db.Timestamptz(6)
+
+  partidasMesario PartidaMesario[]
+  operacoes       OperacaoMobile[]
+
+  @@map("usuarios")
+}
+
+model EventoSumula {
+  id_evento             String   @id @db.Uuid
+  id_partida            String   @db.Uuid
+  id_atleta             String?  @db.Uuid
+  id_clube              String   @db.Uuid
+  tipo_evento           String   @db.VarChar(30)
+  id_atleta_assistencia String?  @db.Uuid
+  minuto_evento         Int?
+  timestamp_offline     DateTime @default(now()) @db.Timestamptz(6)
+  id_atleta_relacionado String?  @db.Uuid
+  detalhe_evento        String?  @db.VarChar(80)
+  periodo               String   @default("1T") @db.VarChar(30)
+  segundo_evento        Int      @default(0)
+  sequencia             BigInt   @default(0)
+  cancelado             Boolean  @default(false)
+
+  partida           Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+  clube             Clube   @relation(fields: [id_clube], references: [id_clube])
+  atleta            Atleta? @relation("AtletaEvento", fields: [id_atleta], references: [id_atleta], onDelete: SetNull)
+  atletaAssistencia Atleta? @relation("AtletaAssistencia", fields: [id_atleta_assistencia], references: [id_atleta], onDelete: SetNull)
+  atletaRelacionado Atleta? @relation("AtletaRelacionado", fields: [id_atleta_relacionado], references: [id_atleta], onDelete: SetNull)
+
+  @@index([id_partida], map: "idx_eventos_partida")
+  @@index([id_atleta], map: "idx_eventos_atleta")
+  @@map("eventos_sumula")
+}
+
+model PartidaMesario {
+  id_partida   String   @db.Uuid
+  id_usuario   String   @db.Uuid
+  atribuido_em DateTime @default(now()) @db.Timestamptz(6)
+
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario], onDelete: Cascade)
+
+  @@id([id_partida, id_usuario])
+  @@map("partidas_mesarios")
+}
+
+model PessoaPartida {
+  id_pessoa  String  @id @db.Uuid
+  id_partida String  @db.Uuid
+  id_clube   String? @db.Uuid
+  nome       String  @db.VarChar(150)
+  funcao     String  @db.VarChar(40)
+  documento  String? @db.VarChar(60)
+
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+  clube   Clube?  @relation(fields: [id_clube], references: [id_clube], onDelete: SetNull)
+
+  @@map("pessoas_partida")
+}
+
+model EscalacaoPartida {
+  id_partida               String    @db.Uuid
+  id_atleta                String    @db.Uuid
+  id_clube                 String    @db.Uuid
+  numero_camisa            Int?
+  confirmado               Boolean   @default(false)
+  elegivel                 Boolean   @default(true)
+  observacao_elegibilidade String?
+  titular                  Boolean   @default(false)
+  capitao                  Boolean   @default(false)
+  checkin_em               DateTime? @db.Timestamptz(6)
+  atualizado_em            DateTime  @default(now()) @db.Timestamptz(6)
+
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+  atleta  Atleta  @relation(fields: [id_atleta], references: [id_atleta], onDelete: Cascade)
+  clube   Clube   @relation(fields: [id_clube], references: [id_clube])
+
+  @@id([id_partida, id_atleta])
+  @@index([id_partida, id_clube], map: "idx_escalacoes_partida")
+  @@map("escalacoes_partida")
+}
+
+model AssinaturaSumula {
+  id_assinatura     String   @id @db.Uuid
+  id_partida        String   @db.Uuid
+  nome_signatario   String   @db.VarChar(150)
+  funcao_signatario String   @db.VarChar(40)
+  fase              String   @db.VarChar(10)
+  path_data         Json
+  assinado_em       DateTime @db.Timestamptz(6)
+
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+
+  @@unique([id_partida, funcao_signatario, fase])
+  @@index([id_partida, fase], map: "idx_assinaturas_partida")
+  @@map("assinaturas_sumula")
+}
+
+model PeriodoPartida {
+  id_partida    String   @db.Uuid
+  periodo       String   @db.VarChar(30)
+  segundos      Int      @default(0)
+  em_andamento  Boolean  @default(false)
+  atualizado_em DateTime @default(now()) @db.Timestamptz(6)
+
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+
+  @@id([id_partida, periodo])
+  @@map("periodos_partida")
+}
+
+model OperacaoMobile {
+  operation_id          String   @id @db.VarChar(100)
+  id_usuario            String   @db.Uuid
+  id_partida            String   @db.Uuid
+  entidade              String   @db.VarChar(40)
+  acao                  String   @db.VarChar(30)
+  payload               Json
+  criado_no_dispositivo DateTime @db.Timestamptz(6)
+  processado_em         DateTime @default(now()) @db.Timestamptz(6)
+
+  usuario Usuario @relation(fields: [id_usuario], references: [id_usuario])
+  partida Partida @relation(fields: [id_partida], references: [id_partida], onDelete: Cascade)
+
+  @@index([id_partida, processado_em], map: "idx_operacoes_mobile_partida")
+  @@map("operacoes_mobile")
+}

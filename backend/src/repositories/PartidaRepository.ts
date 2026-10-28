@@ -61,7 +61,9 @@ export class PartidaRepository {
     const query = `SELECT p.*,
         c.nome as nome_campeonato,
         m.nome as nome_mandante,
-        v.nome as nome_visitante
+        m.brasao as brasao_mandante,
+        v.nome as nome_visitante,
+        v.brasao as brasao_visitante
       FROM partidas p
       JOIN campeonatos c ON p.id_campeonato = c.id_campeonato
       JOIN clubes m ON p.id_mandante = m.id_clube
