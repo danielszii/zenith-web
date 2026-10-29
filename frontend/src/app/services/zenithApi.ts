@@ -30,6 +30,12 @@ export const getApiError = (error: unknown) => {
     : "Não foi possível concluir a operação.";
 };
 
+export const hasApiStatus = (error: unknown, status: number) =>
+  typeof error === "object" &&
+  error !== null &&
+  "response" in error &&
+  (error as { response?: { status?: number } }).response?.status === status;
+
 export const zenithApi = {
   health: async () => (await api.get<{ status: string }>("/health")).data,
   login: async (email: string, senha: string) =>
@@ -40,6 +46,22 @@ export const zenithApi = {
     senha: string;
     role: UserRole;
   }) => (await api.post("/auth/registrar", input)).data,
+  media: {
+    upload: async (file: File, kind: "atleta" | "clube") => {
+      if (file.size > 4 * 1024 * 1024) throw new Error("A imagem deve ter no máximo 4 MB.");
+      const data = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(new Error("Não foi possível ler a imagem."));
+        reader.readAsDataURL(file);
+      });
+      return (await api.post<{ url: string; path: string }>("/midias/upload", {
+        data,
+        mimeType: file.type,
+        kind,
+      })).data;
+    },
+  },
 
   clubs: {
     list: async () => (await api.get<Club[]>("/clubes")).data,

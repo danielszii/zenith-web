@@ -5,9 +5,9 @@ export class CreateAtletaDTO {
   @IsNotEmpty({ message: 'O nome do atleta é obrigatório.' })
   nome!: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'O CPF é obrigatório.' })
-  cpf!: string;
+  cpf?: string;
 
   @IsOptional()
   @IsString()
@@ -16,9 +16,9 @@ export class CreateAtletaDTO {
   @IsDateString({}, { message: 'A data de nascimento deve estar no formato AAAA-MM-DD.' })
   data_nasc!: string;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty({ message: 'O tipo sanguíneo é obrigatório.' })
-  tipo_sanguineo!: string;
+  tipo_sanguineo?: string;
 
   @IsUUID('4', { message: 'O clube deve ter um UUID válido.' })
   id_clube!: string;

@@ -12,6 +12,7 @@ import { EventoController } from "../controllers/EventoController.js";
 import { AuthController } from "../controllers/AuthController.js"; // Novo
 import { MobileController } from "../controllers/MobileController.js";
 import { EstatisticaController } from "../controllers/EstatisticaController.js";
+import { MediaController } from "../controllers/MediaController.js";
 
 import { AtletaService } from "../services/AtletaService.js";
 import { ClubeService } from "../services/ClubeService.js";
@@ -30,6 +31,7 @@ import { MobileRepository } from "../repositories/MobileRepository.js";
 import { MobileService } from "../services/MobileService.js";
 import { EstatisticaService } from "../services/EstatisticaService.js";
 import { EstatisticaRepository } from "../repositories/EstatisticaRepository.js";
+import { MediaService } from "../services/MediaService.js";
 
 import { CreateClubeDTO } from "../dtos/CreateClubeDTO.js";
 import { CreateCampeonatoDTO } from "../dtos/CreateCampeonatoDTO.js";
@@ -48,6 +50,10 @@ const eventoController = new EventoController(new EventoService(new PartidaRepos
 const authController = new AuthController(new AuthService(new UsuarioRepository())); // Novo
 const mobileController = new MobileController(new MobileService(new MobileRepository()));
 const estatisticaController = new EstatisticaController(new EstatisticaService(new EstatisticaRepository()));
+const mediaController = new MediaController(new MediaService());
+
+// UPLOAD DE IMAGENS (a chave do Supabase permanece somente na API)
+routes.post('/midias/upload', authMiddleware, roleMiddleware(['admin', 'gestor']), mediaController.upload);
 
 // ROTAS DE AUTENTICAÇÃO (PÚBLICAS)
 routes.post('/auth/registrar', authMiddleware, roleMiddleware(['admin']), validationMiddleware(CreateUsuarioDTO), (req, res, next) => authController.registrar(req, res, next));

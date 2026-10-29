@@ -2,16 +2,19 @@ import { FormEvent, ReactNode, useCallback, useEffect, useState } from "react";
 import {
   ArrowRight,
   CalendarDays,
+  ImagePlus,
   LockKeyhole,
   LogOut,
   Mail,
   Medal,
+  Search,
   ShieldCheck,
   Trophy,
+  Upload,
   Users,
 } from "lucide-react";
 import { Logo } from "./Logo";
-import { getApiError, zenithApi } from "../services/zenithApi";
+import { getApiError, hasApiStatus, zenithApi } from "../services/zenithApi";
 import type {
   Athlete,
   AthleteStats,
@@ -78,6 +81,22 @@ const blankMatch = {
   local: "",
 };
 const dateOnly = (value: string) => value?.slice(0, 10) || "";
+
+async function uploadOrContinue(file: File, kind: "atleta" | "clube") {
+  try {
+    return await zenithApi.media.upload(file, kind);
+  } catch (error) {
+    if (
+      hasApiStatus(error, 503) &&
+      window.confirm(
+        "O armazenamento de imagens ainda não foi configurado. Deseja concluir o cadastro sem imagem? Você poderá adicioná-la depois.",
+      )
+    ) {
+      return null;
+    }
+    throw error;
+  }
+}
 
 export function ManagementPage() {
   const [tab, setTab] = useState<Tab>("account");
@@ -161,41 +180,42 @@ export function ManagementPage() {
   }
 
   return (
-    <main className="page-enter app-shell w-full flex-1 py-12">
-      <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[.2em] text-[var(--primary)]">
-            Portal Zenith
-          </p>
-          <h1 className="font-display mt-2 text-6xl font-normal tracking-wide">PAINEL ZENITH</h1>
-          <p className="mt-1 text-sm text-[var(--muted-foreground)]">
-            Cadastros e informações públicas. A operação da súmula pertence ao
-            aplicativo.
-          </p>
-        </div>
-        <button className={secondary} onClick={() => void reload(user.role)}>
-          {busy ? "Sincronizando…" : "Sincronizar dados"}
-        </button>
-      </div>
-      {notice && (
-        <div
-          className={`mb-5 rounded-xl border p-4 text-sm ${notice.error ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"}`}
-        >
-          {notice.text}
-        </div>
-      )}
-      <div className="mb-6 flex gap-2 overflow-x-auto pb-2">
-        {visibleTabs.map(([id, label, Icon]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={`${secondary} flex shrink-0 items-center gap-2 ${tab === id ? "!bg-[var(--primary)] !text-[var(--primary-foreground)]" : ""}`}
-          >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
-        ))}
-      </div>
+    <main className="page-enter app-shell w-full flex-1 py-8 lg:py-10">
+      <div className="grid min-h-[72vh] gap-6 lg:grid-cols-[15rem_minmax(0,1fr)]">
+        <aside className="h-fit rounded-2xl border border-[var(--border)] bg-[var(--card)] p-3 lg:sticky lg:top-24">
+          <div className="border-b border-[var(--border)] px-3 pb-4 pt-2">
+            <p className="text-[.62rem] font-black uppercase tracking-[.2em] text-[var(--primary)]">Gestão Zenith</p>
+            <strong className="mt-2 block truncate text-sm">{user.nome}</strong>
+            <span className="text-xs capitalize text-[var(--muted-foreground)]">{user.role}</span>
+          </div>
+          <nav className="scrollbar-hide mt-3 flex gap-2 overflow-x-auto lg:flex-col lg:overflow-visible">
+            {visibleTabs.map(([id, label, Icon]) => (
+              <button
+                key={id}
+                onClick={() => setTab(id)}
+                className={`flex shrink-0 items-center gap-3 rounded-xl px-3 py-3 text-left text-sm font-semibold transition ${tab === id ? "bg-[var(--primary)] text-[var(--primary-foreground)]" : "text-[var(--muted-foreground)] hover:bg-[var(--muted)] hover:text-[var(--foreground)]"}`}
+              >
+                <Icon className="h-4 w-4" /> {label}
+              </button>
+            ))}
+          </nav>
+        </aside>
+        <section className="min-w-0">
+          <header className="mb-6 flex flex-col justify-between gap-4 border-b border-[var(--border)] pb-6 sm:flex-row sm:items-end">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[.18em] text-[var(--primary)]">Portal de gestão</p>
+              <h1 className="font-display mt-2 text-5xl tracking-wide sm:text-6xl">{visibleTabs.find(([id]) => id === tab)?.[1]}</h1>
+              <p className="mt-2 max-w-xl text-sm text-[var(--muted-foreground)]">Gerencie os dados oficiais exibidos no portal e enviados ao aplicativo.</p>
+            </div>
+            <button className={secondary} onClick={() => void reload(user.role)}>
+              {busy ? "Sincronizando…" : "Atualizar dados"}
+            </button>
+          </header>
+          {notice && (
+            <div className={`mb-5 rounded-xl border p-4 text-sm ${notice.error ? "border-red-500/30 bg-red-500/10 text-red-300" : "border-emerald-500/30 bg-emerald-500/10 text-emerald-300"}`}>
+              {notice.text}
+            </div>
+          )}
       {tab === "account" && (
         <Account user={user} setUser={setUser} run={run} busy={busy} />
       )}
@@ -221,6 +241,8 @@ export function ManagementPage() {
           user={user}
         />
       )}
+        </section>
+      </div>
     </main>
   );
 }
@@ -419,6 +441,63 @@ function Account({
   );
 }
 
+function SearchField({ value, onChange, placeholder }: { value: string; onChange: (value: string) => void; placeholder: string }) {
+  return (
+    <label className="mb-4 flex items-center gap-3 rounded-xl border border-[var(--border)] bg-[var(--input-background)] px-3">
+      <Search className="h-4 w-4 text-[var(--muted-foreground)]" />
+      <input className="h-11 min-w-0 flex-1 bg-transparent text-sm outline-none" value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />
+    </label>
+  );
+}
+
+function ImageUploadField({
+  label,
+  hint,
+  value,
+  preview,
+  portrait = false,
+  onSelect,
+}: {
+  label: string;
+  hint: string;
+  value?: string;
+  preview?: string;
+  portrait?: boolean;
+  onSelect: (file: File) => void;
+}) {
+  const image = preview || value;
+  return (
+    <label className="group block cursor-pointer rounded-2xl border border-dashed border-[var(--border)] bg-[var(--input-background)] p-3 transition hover:border-[var(--primary)]">
+      <input
+        className="sr-only"
+        type="file"
+        accept="image/jpeg,image/png,image/webp"
+        onChange={(event) => {
+          const file = event.target.files?.[0];
+          if (file) onSelect(file);
+          event.target.value = "";
+        }}
+      />
+      <span className="flex items-center gap-4">
+        <span className={`grid shrink-0 place-items-center overflow-hidden rounded-xl border border-[var(--border)] bg-[var(--muted)] ${portrait ? "h-24 w-20" : "h-20 w-20"}`}>
+          {image ? (
+            <img src={image} alt="Pré-visualização" className="h-full w-full object-cover" />
+          ) : (
+            <ImagePlus className="h-7 w-7 text-[var(--muted-foreground)]" />
+          )}
+        </span>
+        <span className="min-w-0 flex-1">
+          <strong className="block text-sm">{label}</strong>
+          <span className="mt-1 block text-xs leading-5 text-[var(--muted-foreground)]">{hint}</span>
+          <span className="mt-3 inline-flex items-center gap-2 text-xs font-bold text-[var(--primary)]">
+            <Upload className="h-4 w-4" /> {image ? "Trocar imagem" : "Selecionar imagem"}
+          </span>
+        </span>
+      </span>
+    </label>
+  );
+}
+
 function Clubs({
   clubs,
   run,
@@ -430,18 +509,33 @@ function Clubs({
 }) {
   const [form, setForm] = useState(blankClub);
   const [editId, setEditId] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [query, setQuery] = useState("");
+  const resetImage = () => {
+    if (imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview("");
+  };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const ok = await run(
-      () =>
-        editId
-          ? zenithApi.clubs.update(editId, form)
-          : zenithApi.clubs.create(form),
+      async () => {
+        const payload = { ...form, cnpj: form.cnpj || undefined };
+        if (imageFile) {
+          const uploaded = await uploadOrContinue(imageFile, "clube");
+          if (uploaded) payload.brasao = uploaded.url;
+        }
+        return editId
+          ? zenithApi.clubs.update(editId, payload)
+          : zenithApi.clubs.create(payload);
+      },
       editId ? "Clube atualizado." : "Clube criado.",
     );
     if (ok) {
       setEditId(null);
       setForm(blankClub);
+      resetImage();
     }
   };
   return (
@@ -450,25 +544,35 @@ function Clubs({
       form={
         <form className="space-y-3" onSubmit={submit}>
           {(
-            ["nome", "responsavel", "cnpj", "cores_oficiais", "brasao"] as const
+            ["nome", "responsavel", "cnpj", "cores_oficiais"] as const
           ).map((key) => (
             <input
               key={key}
               className={field}
-              required={["nome", "responsavel", "cnpj"].includes(key)}
+              required={["nome", "responsavel"].includes(key)}
               placeholder={
                 {
                   nome: "Nome",
                   responsavel: "Responsável",
                   cnpj: "CNPJ",
                   cores_oficiais: "Cores oficiais",
-                  brasao: "URL do brasão",
                 }[key]
               }
               value={form[key]}
               onChange={(e) => setForm({ ...form, [key]: e.target.value })}
             />
           ))}
+          <ImageUploadField
+            label="Escudo do clube"
+            hint="PNG, JPG ou WebP · máximo 4 MB"
+            value={form.brasao}
+            preview={imagePreview}
+            onSelect={(file) => {
+              resetImage();
+              setImageFile(file);
+              setImagePreview(URL.createObjectURL(file));
+            }}
+          />
           <button className={primary} disabled={busy}>
             {editId ? "Salvar" : "Cadastrar"}
           </button>
@@ -479,6 +583,7 @@ function Clubs({
               onClick={() => {
                 setEditId(null);
                 setForm(blankClub);
+                resetImage();
               }}
             >
               Cancelar
@@ -486,15 +591,19 @@ function Clubs({
           )}
         </form>
       }
-      list={clubs.map((c) => (
+      list={<>
+        <SearchField value={query} onChange={setQuery} placeholder="Buscar clube" />
+        {clubs.filter((club) => `${club.nome} ${club.responsavel} ${club.cnpj}`.toLowerCase().includes(query.toLowerCase())).map((c) => (
         <Row
           key={c.id_clube}
           title={c.nome}
           subtitle={`${c.responsavel || "Sem responsável"} · ${c.cnpj || "Sem CNPJ"}`}
+          leading={c.brasao ? <img src={c.brasao} alt="" className="h-full w-full object-contain p-1" /> : <Users className="h-5 w-5" />}
         >
           <button
             className={secondary}
             onClick={() => {
+              resetImage();
               setEditId(c.id_clube);
               setForm({
                 nome: c.nome,
@@ -520,7 +629,7 @@ function Clubs({
             Excluir
           </button>
         </Row>
-      ))}
+      ))}</>}
     />
   );
 }
@@ -539,38 +648,53 @@ function Athletes({
   const [form, setForm] = useState(blankAthlete);
   const [editId, setEditId] = useState<string | null>(null);
   const [stats, setStats] = useState<AthleteStats | null>(null);
-  const payload = {
-    ...form,
-    foto_perfil: form.foto_perfil || undefined,
-    peso: form.peso ? Number(form.peso) : undefined,
-    altura: form.altura ? Number(form.altura) : undefined,
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+  const [query, setQuery] = useState("");
+  const resetImage = () => {
+    if (imagePreview.startsWith("blob:")) URL.revokeObjectURL(imagePreview);
+    setImageFile(null);
+    setImagePreview("");
   };
   const submit = async (e: FormEvent) => {
     e.preventDefault();
     const ok = await run(
-      () =>
-        editId
+      async () => {
+        const uploaded = imageFile ? await uploadOrContinue(imageFile, "atleta") : null;
+        const payload = {
+          ...form,
+          cpf: form.cpf || undefined,
+          rg: form.rg || undefined,
+          tipo_sanguineo: form.tipo_sanguineo || undefined,
+          foto_perfil: uploaded?.url || form.foto_perfil || undefined,
+          peso: form.peso ? Number(form.peso) : undefined,
+          altura: form.altura ? Number(form.altura) : undefined,
+        };
+        return editId
           ? zenithApi.athletes.update(editId, payload)
-          : zenithApi.athletes.create(payload),
+          : zenithApi.athletes.create(payload);
+      },
       editId ? "Atleta atualizado." : "Atleta criado.",
     );
     if (ok) {
       setEditId(null);
       setForm(blankAthlete);
+      resetImage();
     }
   };
   const edit = (a: Athlete) => {
+    resetImage();
     setEditId(a.id_atleta);
     setForm({
       nome: a.nome,
-      cpf: a.cpf,
+      cpf: a.cpf || "",
       rg: a.rg || "",
       foto_perfil: a.foto_perfil || "",
       data_nasc: dateOnly(a.data_nasc),
       status: a.status,
       peso: a.peso?.toString() || "",
       altura: a.altura?.toString() || "",
-      tipo_sanguineo: a.tipo_sanguineo,
+      tipo_sanguineo: a.tipo_sanguineo || "",
       id_clube: a.id_clube,
     });
   };
@@ -589,23 +713,27 @@ function Athletes({
             />
             <input
               className={field}
-              required
-              placeholder="CPF"
+              placeholder="CPF (opcional)"
               value={form.cpf}
               onChange={(e) => setForm({ ...form, cpf: e.target.value })}
             />
             <input
               className={field}
-              placeholder="RG"
+              placeholder="RG (opcional)"
               value={form.rg}
               onChange={(e) => setForm({ ...form, rg: e.target.value })}
             />
-            <input
-              className={field}
-              type="url"
-              placeholder="URL da foto do atleta"
+            <ImageUploadField
+              label="Foto do atleta"
+              hint="Prefira uma foto vertical e nítida · máximo 4 MB"
               value={form.foto_perfil}
-              onChange={(e) => setForm({ ...form, foto_perfil: e.target.value })}
+              preview={imagePreview}
+              portrait
+              onSelect={(file) => {
+                resetImage();
+                setImageFile(file);
+                setImagePreview(URL.createObjectURL(file));
+              }}
             />
             <input
               className={field}
@@ -614,15 +742,18 @@ function Athletes({
               value={form.data_nasc}
               onChange={(e) => setForm({ ...form, data_nasc: e.target.value })}
             />
-            <input
+            <select
               className={field}
-              required
-              placeholder="Tipo sanguíneo"
               value={form.tipo_sanguineo}
               onChange={(e) =>
                 setForm({ ...form, tipo_sanguineo: e.target.value })
               }
-            />
+            >
+              <option value="">Tipo sanguíneo (opcional)</option>
+              {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((tipo) => (
+                <option key={tipo} value={tipo}>{tipo}</option>
+              ))}
+            </select>
             <select
               className={field}
               required
@@ -664,11 +795,14 @@ function Athletes({
             </button>
           </form>
         }
-        list={athletes.map((a) => (
+        list={<>
+          <SearchField value={query} onChange={setQuery} placeholder="Buscar atleta ou clube" />
+          {athletes.filter((athlete) => `${athlete.nome} ${clubs.find((club) => club.id_clube === athlete.id_clube)?.nome || ""}`.toLowerCase().includes(query.toLowerCase())).map((a) => (
           <Row
             key={a.id_atleta}
             title={a.nome}
             subtitle={`${clubs.find((c) => c.id_clube === a.id_clube)?.nome || "Sem clube"} · ${a.status}`}
+            leading={a.foto_perfil ? <img src={a.foto_perfil} alt="" className="h-full w-full object-cover" /> : <Medal className="h-5 w-5" />}
           >
             <button
               className={secondary}
@@ -698,7 +832,7 @@ function Athletes({
               Excluir
             </button>
           </Row>
-        ))}
+        ))}</>}
       />
       {stats && (
         <section className={`${panel} mt-6`}>
@@ -1101,13 +1235,16 @@ function Layout({
   list: ReactNode;
 }) {
   return (
-    <div className="grid gap-6 xl:grid-cols-[420px_1fr]">
-      <section className={panel}>
-        <h2 className="mb-4 text-xl font-semibold">{title}</h2>
+    <div className="grid items-start gap-6 xl:grid-cols-[minmax(22rem,25rem)_minmax(0,1fr)]">
+      <section className={`${panel} xl:sticky xl:top-24`}>
+        <p className="text-[.62rem] font-black uppercase tracking-[.18em] text-[var(--primary)]">{title.includes("Partida") ? "Nova operação" : "Novo cadastro"}</p>
+        <h2 className="mb-5 mt-1 text-xl font-semibold">{title}</h2>
         {form}
       </section>
       <section className={panel}>
-        <h2 className="mb-4 text-xl font-semibold">Registros</h2>
+        <div className="mb-4 flex items-center justify-between gap-3">
+          <div><p className="text-[.62rem] font-black uppercase tracking-[.18em] text-[var(--primary)]">Base oficial</p><h2 className="mt-1 text-xl font-semibold">Registros</h2></div>
+        </div>
         <div className="space-y-3">{list}</div>
       </section>
     </div>
@@ -1116,17 +1253,22 @@ function Layout({
 function Row({
   title,
   subtitle,
+  leading,
   children,
 }: {
   title: string;
   subtitle: string;
+  leading?: ReactNode;
   children?: ReactNode;
 }) {
   return (
-    <div className="flex flex-col justify-between gap-3 rounded-xl border border-[var(--border)] p-4 md:flex-row md:items-center">
-      <div>
-        <p className="font-medium">{title}</p>
-        <p className="text-sm text-[var(--muted-foreground)]">{subtitle}</p>
+    <div className="flex flex-col justify-between gap-4 rounded-xl border border-[var(--border)] bg-[var(--card)] p-3 transition hover:border-[color:var(--primary)]/40 md:flex-row md:items-center">
+      <div className="flex min-w-0 items-center gap-3">
+        {leading && <span className="grid h-12 w-12 shrink-0 place-items-center overflow-hidden rounded-xl bg-[var(--muted)] text-[var(--primary)]">{leading}</span>}
+        <div className="min-w-0">
+          <p className="truncate font-semibold">{title}</p>
+          <p className="truncate text-sm text-[var(--muted-foreground)]">{subtitle}</p>
+        </div>
       </div>
       {children && <div className="flex flex-wrap gap-2">{children}</div>}
     </div>

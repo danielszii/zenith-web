@@ -58,14 +58,14 @@ model CampeonatoClube {
 model Atleta {
   id_atleta      String   @id @db.Uuid
   nome           String   @db.VarChar(150)
-  cpf            String   @unique @db.VarChar(14)
+  cpf            String?  @unique @db.VarChar(14)
   rg             String?  @db.VarChar(30)
   foto_perfil    String?
   data_nasc      DateTime @db.Date
   status         String   @default("ativo") @db.VarChar(30)
   peso           Decimal? @db.Decimal(5, 2)
   altura         Decimal? @db.Decimal(4, 2)
-  tipo_sanguineo String   @db.VarChar(5)
+  tipo_sanguineo String?  @db.VarChar(5)
   id_clube       String?  @db.Uuid
 
   clube               Clube?             @relation(fields: [id_clube], references: [id_clube], onDelete: SetNull)

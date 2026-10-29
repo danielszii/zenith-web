@@ -18,16 +18,27 @@ export function errorMiddleware(
   }
 
   const databaseError = error as Error & { code?: string; constraint?: string };
-  if (databaseError.code === '23505') {
+  const hasDatabaseCode = (code: string) =>
+    databaseError.code === code ||
+    (databaseError.code === 'P2010' && databaseError.message.includes(`Code: \`${code}\``));
+  if (hasDatabaseCode('23505')) {
     res.status(409).json({ code: 409, message: 'Já existe um registro com esses dados.' });
     return;
   }
-  if (databaseError.code === '23503') {
+  if (hasDatabaseCode('23503')) {
     res.status(409).json({ code: 409, message: 'A operação viola o vínculo com outro registro.' });
     return;
   }
-  if (databaseError.code === '22P02') {
+  if (hasDatabaseCode('22P02')) {
     res.status(400).json({ code: 400, message: 'Um dos identificadores informados é inválido.' });
+    return;
+  }
+  if (hasDatabaseCode('22001')) {
+    res.status(400).json({ code: 400, message: 'Um dos campos ultrapassou o tamanho permitido.' });
+    return;
+  }
+  if (hasDatabaseCode('23502')) {
+    res.status(400).json({ code: 400, message: 'Um campo obrigatório não foi informado.' });
     return;
   }
 

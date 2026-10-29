@@ -124,9 +124,9 @@ function Dashboard({ matches, loading }: { matches: Match[]; loading: boolean })
     <main className="page-enter min-w-0 flex-1 pb-8">
       {!loading && <MatchTicker matches={matches} />}
 
-      <HomeFeaturedAthletes />
       <HomeCompetitions />
       <HomeStatsCentre />
+      <HomeFeaturedAthletes />
     </main>
   );
 }

@@ -12,6 +12,11 @@ export const env = {
   jwtSecret: process.env.JWT_SECRET || 'zenith_local_development_only',
   port: Number(process.env.PORT || 3000),
   frontendUrls,
+  supabaseUrl: process.env.SUPABASE_URL?.trim().replace(/\/$/, ''),
+  supabaseSecretKey: (
+    process.env.SUPABASE_SECRET_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY
+  )?.trim(),
+  supabaseStorageBucket: process.env.SUPABASE_STORAGE_BUCKET?.trim() || 'zenith-media',
   isProduction: process.env.NODE_ENV === 'production',
 };
 

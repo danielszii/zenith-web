@@ -167,7 +167,7 @@
   display: flex;
   width: max-content;
   will-change: transform;
-  animation: ticker-scroll 32s linear infinite !important;
+  animation: ticker-scroll 55s linear infinite !important;
 }
 
 .ticker-card {

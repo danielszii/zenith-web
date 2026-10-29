@@ -20,9 +20,9 @@ export class Clube {
     responsavel?: string,
     cnpj?: string,
   ) {
-    if (!nome || !responsavel || !cnpj) {
+    if (!nome || !responsavel) {
       throw new BadRequestError(
-        "Os atributos nome, responsável e CNPJ não podem ser vazios",
+        "Os atributos nome e responsável não podem ser vazios",
       );
     }
 

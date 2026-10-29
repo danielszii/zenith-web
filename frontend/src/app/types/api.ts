@@ -27,14 +27,14 @@ export interface Club {
 export interface Athlete {
   id_atleta: string;
   nome: string;
-  cpf: string;
+  cpf?: string | null;
   rg?: string | null;
   foto_perfil?: string | null;
   data_nasc: string;
   status: string;
   peso?: number | null;
   altura?: number | null;
-  tipo_sanguineo: string;
+  tipo_sanguineo?: string | null;
   id_clube: string;
 }
 

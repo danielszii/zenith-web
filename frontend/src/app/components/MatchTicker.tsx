@@ -65,7 +65,7 @@ export function MatchTicker({ matches }: { matches: Match[] }) {
         ref={trackRef}
         className="match-ticker-track flex items-center"
         style={{
-          animation: 'ticker-scroll 32s linear infinite',
+          animation: 'ticker-scroll 55s linear infinite',
           willChange: 'transform',
         }}
       >

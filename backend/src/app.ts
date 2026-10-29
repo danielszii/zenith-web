@@ -14,7 +14,8 @@ app.disable('x-powered-by');
 if (env.isProduction) app.set('trust proxy', 1);
 
 app.use(helmet());
-app.use(express.json({ limit: '5mb' }));
+// Imagens chegam em base64 apenas no endpoint autenticado de mídia (máximo real: 4 MB).
+app.use(express.json({ limit: '6mb' }));
 app.use(cors({
   origin(origin, callback) {
     if (!origin || env.frontendUrls.includes(origin.replace(/\/$/, ''))) return callback(null, true);

@@ -5,11 +5,11 @@ import { ValidarCPF } from "../util/validarCPF.js";
 export type propsAtleta = {
   id_atleta: string;
   nome: string;
-  cpf: string;
+  cpf?: string;
   rg?: string;
   foto_perfil?: string;
   data_nasc: string | Date;
-  tipo_sanguineo: string;
+  tipo_sanguineo?: string;
   id_clube: string;
   peso?: number;
   altura?: number;
@@ -20,9 +20,9 @@ export class Atleta {
   private constructor(private readonly props: propsAtleta) {}
   public static construir(
     nome: string,
-    cpf: string,
+    cpf: string | undefined,
     data_nasc: string | Date,
-    tipo_sanguineo: string,
+    tipo_sanguineo: string | undefined,
     id_clube: string,
     rg?: string,
     foto_perfil?: string,
@@ -30,13 +30,13 @@ export class Atleta {
     altura?: number,
     status?: string,
   ) {
-    if (!nome || !cpf || !data_nasc || !tipo_sanguineo || !id_clube) {
+    if (!nome || !data_nasc || !id_clube) {
       throw new BadRequestError(
-        "Os atributos nome, cpf, data de nascimento, tipo sanguíneo e id do clube não podem ser vazios",
+        "Nome, data de nascimento e clube são obrigatórios",
       );
     }
 
-    if (!ValidarCPF.validarCPF(cpf)) {
+    if (cpf && !ValidarCPF.validarCPF(cpf)) {
       throw new BadRequestError("CPF inválido");
     }
 
